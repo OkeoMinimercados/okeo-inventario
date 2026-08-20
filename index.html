@@ -1317,6 +1317,7 @@ async function loginWithChallenge(username,password){
  const fetchPublic=async(action,params={})=>{
    const u=new URL(OKEO_DEFAULT_BACKEND);
    u.searchParams.set('action',action);
+   u.searchParams.set('_ts',Date.now().toString()+'_'+Math.random().toString(36).slice(2));
    Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
    const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),12000);
    try{
@@ -1325,11 +1326,11 @@ async function loginWithChallenge(username,password){
    }finally{clearTimeout(timer)}
  };
  const c=await fetchPublic('login_challenge',{username});
- if(!c||!c.ok)throw new Error((c&&c.error)||'Não foi possível iniciar o login.');
+ if(!c||!c.ok)throw new Error('CHALLENGE: '+((c&&c.error)||'Não foi possível iniciar o login.'));
  const passHash=await sha256Hex(String(c.salt||'')+'|'+String(password||''));
  const proof=await sha256Hex(String(c.nonce||'')+'|'+passHash);
  const r=await fetchPublic('login_verify',{username,nonce:c.nonce,proof});
- if(!r||!r.ok)throw new Error((r&&r.error)||'Usuário ou senha inválidos.');
+ if(!r||!r.ok)throw new Error('VERIFY: '+((r&&r.error)||'Usuário ou senha inválidos.'));
  return r;
 }
 async function saveUserWithHash(data){
