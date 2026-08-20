@@ -1,5 +1,5 @@
-const CACHE='okeo-gestao-v4-1-9';
-const ASSETS=['./','./index.html','./manifest.webmanifest','./icon.png','./okeo-logo.png'];
+const CACHE='okeo-gestao-v4-2-1';
+const ASSETS=['./','./index.html','./manifest.webmanifest','./icon.png','./okeo-logo.png','./historico-vendas-abr-jul-2026.json'];
 
 self.addEventListener('install',event=>{
   event.waitUntil(

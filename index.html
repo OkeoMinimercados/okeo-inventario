@@ -47,7 +47,7 @@ main{max-width:1180px!important}
 .consolidatedNote{padding:12px 15px;background:#f8fbf9;color:#376246;font-size:12px;border-top:1px solid #e2ebe5}
 @media(max-width:900px){.kpiGrid,.moduleGrid{grid-template-columns:repeat(2,1fr)}.consolidatedMetrics{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.kpiGrid,.moduleGrid{grid-template-columns:1fr}.consolidatedMetrics{grid-template-columns:1fr}.consolidatedMetrics>div{border-right:0;border-bottom:1px solid #edf0f2}.homeHero{display:none}}
-</style>
+.roleAccessBanner{margin:10px 0;padding:10px 12px;border-radius:10px;background:#fff3cd;border:1px solid #f3d98b;color:#745b00;font-size:13px;font-weight:700}</style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
@@ -69,6 +69,9 @@ main{max-width:1180px!important}
     <h2 style="margin:0">OKEO Gestão</h2>
     <div class="muted">Gestão integrada de estoque, vendas, financeiro e reposição</div>
   </div>
+</div>
+<div id="roleAccessBanner" class="roleAccessBanner" style="display:none">
+  Perfil Operacional: acesso permitido somente a Inventário e Entrada por NF.
 </div>
 <div id="dashboardHome" class="dashboardHome">
   <div class="kpiGrid">
@@ -585,7 +588,8 @@ let stockLedger=JSON.parse(localStorage.getItem('okeo_stock_v3')||'{}');
 let invoiceLines=[],nfStream=null;
 let API_URL=localStorage.getItem('okeo_api_url')||'';
 
-function showTab(name){if(!authState.user||document.getElementById('loginOverlay')?.style.display!=='none'){return;}if(!canAccessModule(name)){alert('Seu perfil não possui acesso a este módulo.');return;}document.querySelectorAll('.appTab').forEach(x=>x.style.display='none');const e=document.getElementById('tab-'+name);if(e)e.style.display='block';if(name==='movimentos')renderStock();if(name==='dashboard')renderDashboard();if(name==='financeiro')renderCash();if(name==='dre')renderDre();if(name==='faturamento')renderSalesHistory();if(name==='produtos')renderProductAnalysis();if(name==='reposicao')renderReplenishment();if(name==='fornecedores')renderSupplierList();if(name==='grupos')renderDemandGroups();if(name==='horarios')renderTimeAnalysis();if(name==='mensal')renderMonthlyHistory();if(name==='cashback')renderPaymentModule();if(name==='fiscal')renderFiscal();if(name==='integracao')renderIntegration();if(name==='acessos')renderUsers()}
+function showTab(name){
+ applyRoleUI();if(!authState.user||document.getElementById('loginOverlay')?.style.display!=='none'){return;}if(!canAccessModule(name)){alert('Seu perfil não possui acesso a este módulo.');return;}document.querySelectorAll('.appTab').forEach(x=>x.style.display='none');const e=document.getElementById('tab-'+name);if(e)e.style.display='block';if(name==='movimentos')renderStock();if(name==='dashboard')renderDashboard();if(name==='financeiro')renderCash();if(name==='dre')renderDre();if(name==='faturamento')renderSalesHistory();if(name==='produtos')renderProductAnalysis();if(name==='reposicao')renderReplenishment();if(name==='fornecedores')renderSupplierList();if(name==='grupos')renderDemandGroups();if(name==='horarios')renderTimeAnalysis();if(name==='mensal')renderMonthlyHistory();if(name==='cashback')renderPaymentModule();if(name==='fiscal')renderFiscal();if(name==='integracao')renderIntegration();if(name==='acessos')renderUsers()}
 window.showTab=showTab;
 function fillUnitSelect(id,blank=false){const s=document.getElementById(id);if(!s)return;s.innerHTML=(blank?'<option value="">Nenhuma / externa</option>':'')+units.map(u=>`<option value="${u}">${u}</option>`).join('')}
 ['moveFrom','moveTo','stockUnit','nfUnit','dashUnit'].forEach(id=>fillUnitSelect(id,id==='moveFrom'||id==='moveTo'));
@@ -1264,15 +1268,36 @@ async function flushSyncQueue(){
 window.addEventListener('online',flushSyncQueue);
 
 function applyRoleUI(){
- const role=(authState.user&&authState.user.role)||'';
+ const role=(authState.user&&String(authState.user.role||'').toUpperCase())||'';
  document.querySelectorAll('[data-min-role]').forEach(el=>{
-   const req=el.getAttribute('data-min-role');
-   el.style.display=(role==='ADMIN'||(role==='OPERATIONAL'&&req==='OPERATIONAL'))?'':'none';
+   const module=el.getAttribute('data-module')||'';
+   let allowed=false;
+   if(role==='ADMIN'){
+     allowed=true;
+   }else if(role==='OPERATIONAL'){
+     allowed=(module==='inventario'||module==='nf');
+   }
+   el.style.setProperty('display',allowed?'':'none','important');
  });
+ // Mantém apenas módulos autorizados no painel moderno
+ document.querySelectorAll('.moduleCard').forEach(el=>{
+   const module=el.getAttribute('data-module')||'';
+   const allowed=role==='ADMIN'||(role==='OPERATIONAL'&&(module==='inventario'||module==='nf'));
+   el.style.setProperty('display',allowed?'flex':'none','important');
+ });
+ // Elementos administrativos auxiliares
+ document.querySelectorAll('[data-admin-only]').forEach(el=>{
+   el.style.setProperty('display',role==='ADMIN'?'':'none','important');
+ });
+ const banner=document.getElementById('roleAccessBanner');if(banner)banner.style.display=(role==='OPERATIONAL'?'block':'none');
+ const lbl=document.getElementById('currentUserLabel');
+ if(lbl&&authState.user)lbl.textContent=`• ${authState.user.name||authState.user.username||''} (${role==='ADMIN'?'Administrador':'Operacional'})`;
 }
 function canAccessModule(name){
- const role=(authState.user&&authState.user.role)||'';
- return role==='ADMIN'||(role==='OPERATIONAL'&&(name==='inventario'||name==='nf'));
+ const role=(authState.user&&String(authState.user.role||'').toUpperCase())||'';
+ if(role==='ADMIN')return true;
+ if(role==='OPERATIONAL')return name==='inventario'||name==='nf';
+ return false;
 }
 async function validateSession(){
  if(!authState.token)return false;
