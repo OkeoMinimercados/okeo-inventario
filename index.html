@@ -611,7 +611,7 @@ let stockLedger=JSON.parse(localStorage.getItem('okeo_stock_v3')||'{}');
 let invoiceLines=[],nfStream=null;
 let API_URL=localStorage.getItem('okeo_api_url')||'';
 
-function showTab(name){if(!authState.user){return;}if(!canAccessModule(name)){alert('Seu perfil não possui acesso a este módulo.');return;}document.querySelectorAll('.appTab').forEach(x=>x.style.display='none');const e=document.getElementById('tab-'+name);if(e)e.style.display='block';if(name==='movimentos')renderStock();if(name==='dashboard')renderDashboard();if(name==='financeiro')renderCash();if(name==='dre')renderDre();if(name==='faturamento')renderSalesHistory();if(name==='produtos')renderProductAnalysis();if(name==='reposicao')renderReplenishment();if(name==='fornecedores')renderSupplierList();if(name==='grupos')renderDemandGroups();if(name==='horarios')renderTimeAnalysis();if(name==='mensal')renderMonthlyHistory();if(name==='cashback')renderPaymentModule();if(name==='fiscal')renderFiscal();if(name==='integracao')renderIntegration();if(name==='acessos')renderUsers()}
+function showTab(name){if(!authState.user||document.getElementById('loginOverlay')?.style.display!=='none'){return;}if(!canAccessModule(name)){alert('Seu perfil não possui acesso a este módulo.');return;}document.querySelectorAll('.appTab').forEach(x=>x.style.display='none');const e=document.getElementById('tab-'+name);if(e)e.style.display='block';if(name==='movimentos')renderStock();if(name==='dashboard')renderDashboard();if(name==='financeiro')renderCash();if(name==='dre')renderDre();if(name==='faturamento')renderSalesHistory();if(name==='produtos')renderProductAnalysis();if(name==='reposicao')renderReplenishment();if(name==='fornecedores')renderSupplierList();if(name==='grupos')renderDemandGroups();if(name==='horarios')renderTimeAnalysis();if(name==='mensal')renderMonthlyHistory();if(name==='cashback')renderPaymentModule();if(name==='fiscal')renderFiscal();if(name==='integracao')renderIntegration();if(name==='acessos')renderUsers()}
 window.showTab=showTab;
 function fillUnitSelect(id,blank=false){const s=document.getElementById(id);if(!s)return;s.innerHTML=(blank?'<option value="">Nenhuma / externa</option>':'')+units.map(u=>`<option value="${u}">${u}</option>`).join('')}
 ['moveFrom','moveTo','stockUnit','nfUnit','dashUnit'].forEach(id=>fillUnitSelect(id,id==='moveFrom'||id==='moveTo'));
@@ -1250,12 +1250,23 @@ try{
  const cfg=JSON.parse(localStorage.getItem('okeo_integration_v38')||'{}');
  if(!cfg.backendUrl){cfg.backendUrl='https://script.google.com/macros/s/AKfycbxFBV9P3t0t4FAX4y83yPhQpQnDmLJzNsp4afqoD6NKXMBROOO6Zm-00fuWgqjrcvgq/exec';cfg.mode=cfg.mode||'MANUAL';localStorage.setItem('okeo_integration_v38',JSON.stringify(cfg));}
 }catch(e){}
+
+try{
+ localStorage.setItem('okeo_api_url','https://script.google.com/macros/s/AKfycbxFBV9P3t0t4FAX4y83yPhQpQnDmLJzNsp4afqoD6NKXMBROOO6Zm-00fuWgqjrcvgq/exec');
+ const cfg=JSON.parse(localStorage.getItem('okeo_integration_v38')||'{}');
+ cfg.backendUrl='https://script.google.com/macros/s/AKfycbxFBV9P3t0t4FAX4y83yPhQpQnDmLJzNsp4afqoD6NKXMBROOO6Zm-00fuWgqjrcvgq/exec';
+ localStorage.setItem('okeo_integration_v38',JSON.stringify(cfg));
+ if(localStorage.getItem('okeo_backend_migrated_v417')!=='1'){
+   localStorage.removeItem('okeo_auth_token_v39');
+   localStorage.setItem('okeo_backend_migrated_v417','1');
+ }
+}catch(e){}
 // ---------------- V3.9 AUTH + CONSOLIDADO ----------------
 
 let authState={token:localStorage.getItem('okeo_auth_token_v39')||'',user:null};
 let syncQueue=JSON.parse(localStorage.getItem('okeo_sync_queue_v39')||'[]');
 
-function backendUrl(){return (integrationConfig&&integrationConfig.backendUrl)||API_URL||localStorage.getItem('okeo_api_url')||OKEO_DEFAULT_BACKEND}
+function backendUrl(){return 'https://script.google.com/macros/s/AKfycbxFBV9P3t0t4FAX4y83yPhQpQnDmLJzNsp4afqoD6NKXMBROOO6Zm-00fuWgqjrcvgq/exec'}
 async function postBackend(action,data={},withToken=true){
  const url=backendUrl(); if(!url)throw new Error('Backend não configurado');
  const body={action,data}; if(withToken&&authState.token)body.token=authState.token;
@@ -1303,11 +1314,21 @@ async function sha256Hex(text){
  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
 }
 async function loginWithChallenge(username,password){
- const c=await getBackend('login_challenge',{username});
+ const fetchPublic=async(action,params={})=>{
+   const u=new URL(OKEO_DEFAULT_BACKEND);
+   u.searchParams.set('action',action);
+   Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
+   const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),12000);
+   try{
+     const resp=await fetch(u.toString(),{cache:'no-store',signal:ctrl.signal});
+     return await resp.json();
+   }finally{clearTimeout(timer)}
+ };
+ const c=await fetchPublic('login_challenge',{username});
  if(!c||!c.ok)throw new Error((c&&c.error)||'Não foi possível iniciar o login.');
  const passHash=await sha256Hex(String(c.salt||'')+'|'+String(password||''));
  const proof=await sha256Hex(String(c.nonce||'')+'|'+passHash);
- const r=await getBackend('login_verify',{username,nonce:c.nonce,proof});
+ const r=await fetchPublic('login_verify',{username,nonce:c.nonce,proof});
  if(!r||!r.ok)throw new Error((r&&r.error)||'Usuário ou senha inválidos.');
  return r;
 }
