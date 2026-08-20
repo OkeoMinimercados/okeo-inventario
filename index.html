@@ -611,7 +611,7 @@ let stockLedger=JSON.parse(localStorage.getItem('okeo_stock_v3')||'{}');
 let invoiceLines=[],nfStream=null;
 let API_URL=localStorage.getItem('okeo_api_url')||'';
 
-function showTab(name){if(!canAccessModule(name)){alert('Seu perfil não possui acesso a este módulo.');return;}document.querySelectorAll('.appTab').forEach(x=>x.style.display='none');const e=document.getElementById('tab-'+name);if(e)e.style.display='block';if(name==='movimentos')renderStock();if(name==='dashboard')renderDashboard();if(name==='financeiro')renderCash();if(name==='dre')renderDre();if(name==='faturamento')renderSalesHistory();if(name==='produtos')renderProductAnalysis();if(name==='reposicao')renderReplenishment();if(name==='fornecedores')renderSupplierList();if(name==='grupos')renderDemandGroups();if(name==='horarios')renderTimeAnalysis();if(name==='mensal')renderMonthlyHistory();if(name==='cashback')renderPaymentModule();if(name==='fiscal')renderFiscal();if(name==='integracao')renderIntegration();if(name==='acessos')renderUsers()}
+function showTab(name){if(!authState.user){return;}if(!canAccessModule(name)){alert('Seu perfil não possui acesso a este módulo.');return;}document.querySelectorAll('.appTab').forEach(x=>x.style.display='none');const e=document.getElementById('tab-'+name);if(e)e.style.display='block';if(name==='movimentos')renderStock();if(name==='dashboard')renderDashboard();if(name==='financeiro')renderCash();if(name==='dre')renderDre();if(name==='faturamento')renderSalesHistory();if(name==='produtos')renderProductAnalysis();if(name==='reposicao')renderReplenishment();if(name==='fornecedores')renderSupplierList();if(name==='grupos')renderDemandGroups();if(name==='horarios')renderTimeAnalysis();if(name==='mensal')renderMonthlyHistory();if(name==='cashback')renderPaymentModule();if(name==='fiscal')renderFiscal();if(name==='integracao')renderIntegration();if(name==='acessos')renderUsers()}
 window.showTab=showTab;
 function fillUnitSelect(id,blank=false){const s=document.getElementById(id);if(!s)return;s.innerHTML=(blank?'<option value="">Nenhuma / externa</option>':'')+units.map(u=>`<option value="${u}">${u}</option>`).join('')}
 ['moveFrom','moveTo','stockUnit','nfUnit','dashUnit'].forEach(id=>fillUnitSelect(id,id==='moveFrom'||id==='moveTo'));
@@ -1110,8 +1110,8 @@ document.getElementById('fiscalSearch').oninput=renderFiscal;document.getElement
 document.getElementById('saveNewProduct').onclick=async()=>{const e=norm(document.getElementById('newProdEan').value),name=document.getElementById('newProdName').value.trim(),maker=document.getElementById('newProdMaker').value.trim(),cat=document.getElementById('newProdCategory').value.trim(),sup=document.getElementById('newProdSupplier').value.trim(),o=document.getElementById('newProdMsg');if(!e||!name){o.className='status warn';o.textContent='Informe EAN e produto.';return}if(masterProduct(e)){o.className='status warn';o.textContent='EAN já cadastrado.';return}const prod={condominio:'',codigo:'',ean:e,produto:name,fabricante:maker,categoria:cat,ncm:'',cest:'',ean_adicional:''};PRODUCTS.push(prod);const dyn=JSON.parse(localStorage.getItem('okeo_dynamic_products_v37')||'[]');dyn.push(prod);localStorage.setItem('okeo_dynamic_products_v37',JSON.stringify(dyn));if(sup){supplierMap[e]=sup;saveSupplierMap()}o.className='status ok';o.textContent='Produto cadastrado. Consultando fiscal...';const f=await autoFiscalLookup(e);o.textContent=f.ncm?`NCM ${f.ncm}${f.cest?' • CEST '+f.cest:''} • SC: ${f.scStatus}`:'Produto cadastrado. NCM/CEST pendente de fonte confiável.'}
 
 // ---------------- CAMADA ÚNICA DE DADOS / API-READY ----------------
-const OKEO_DEFAULT_BACKEND='https://script.google.com/macros/s/AKfycbxbwxWz0fFkpqnJn-p1tvb9I7qMoG8bbg48misXMxYp91KJdbSHAMA0I6jZ7cMUfH1Z/exec';
-let integrationConfig=JSON.parse(localStorage.getItem('okeo_integration_v38')||'{"mode":"MANUAL","provider":"","backendUrl":"https://script.google.com/macros/s/AKfycbxbwxWz0fFkpqnJn-p1tvb9I7qMoG8bbg48misXMxYp91KJdbSHAMA0I6jZ7cMUfH1Z/exec"}');
+const OKEO_DEFAULT_BACKEND='https://script.google.com/macros/s/AKfycbxFBV9P3t0t4FAX4y83yPhQpQnDmLJzNsp4afqoD6NKXMBROOO6Zm-00fuWgqjrcvgq/exec';
+let integrationConfig=JSON.parse(localStorage.getItem('okeo_integration_v38')||'{"mode":"MANUAL","provider":"","backendUrl":"https://script.google.com/macros/s/AKfycbxFBV9P3t0t4FAX4y83yPhQpQnDmLJzNsp4afqoD6NKXMBROOO6Zm-00fuWgqjrcvgq/exec"}');
 if(!integrationConfig.backendUrl)integrationConfig.backendUrl=OKEO_DEFAULT_BACKEND;
 if(!localStorage.getItem('okeo_api_url'))localStorage.setItem('okeo_api_url',OKEO_DEFAULT_BACKEND);
 
@@ -1246,9 +1246,9 @@ document.getElementById('syncApiNow').onclick=async()=>{
 
 
 try{
- if(!localStorage.getItem('okeo_api_url'))localStorage.setItem('okeo_api_url','https://script.google.com/macros/s/AKfycbxbwxWz0fFkpqnJn-p1tvb9I7qMoG8bbg48misXMxYp91KJdbSHAMA0I6jZ7cMUfH1Z/exec');
+ if(!localStorage.getItem('okeo_api_url'))localStorage.setItem('okeo_api_url','https://script.google.com/macros/s/AKfycbxFBV9P3t0t4FAX4y83yPhQpQnDmLJzNsp4afqoD6NKXMBROOO6Zm-00fuWgqjrcvgq/exec');
  const cfg=JSON.parse(localStorage.getItem('okeo_integration_v38')||'{}');
- if(!cfg.backendUrl){cfg.backendUrl='https://script.google.com/macros/s/AKfycbxbwxWz0fFkpqnJn-p1tvb9I7qMoG8bbg48misXMxYp91KJdbSHAMA0I6jZ7cMUfH1Z/exec';cfg.mode=cfg.mode||'MANUAL';localStorage.setItem('okeo_integration_v38',JSON.stringify(cfg));}
+ if(!cfg.backendUrl){cfg.backendUrl='https://script.google.com/macros/s/AKfycbxFBV9P3t0t4FAX4y83yPhQpQnDmLJzNsp4afqoD6NKXMBROOO6Zm-00fuWgqjrcvgq/exec';cfg.mode=cfg.mode||'MANUAL';localStorage.setItem('okeo_integration_v38',JSON.stringify(cfg));}
 }catch(e){}
 // ---------------- V3.9 AUTH + CONSOLIDADO ----------------
 
