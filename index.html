@@ -1284,9 +1284,37 @@ async function validateSession(){
  try{const r=await getBackend('session');if(r.ok){authState.user=r.user;applyRoleUI();return true}}catch(e){}
  localStorage.removeItem('okeo_auth_token_v39');return false;
 }
+
+document.getElementById('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('loginBtn').click()});
 document.getElementById('loginBtn').onclick=async()=>{
- const o=document.getElementById('loginMsg'),username=document.getElementById('loginUser').value.trim(),password=document.getElementById('loginPass').value;
- try{const r=await postBackend('login',{username,password},false);if(!r.ok)throw 0;authState={token:r.token,user:r.user};localStorage.setItem('okeo_auth_token_v39',r.token);document.getElementById('loginOverlay').style.display='none';applyRoleUI();
+ const o=document.getElementById('loginMsg');
+ const username=document.getElementById('loginUser').value.trim();
+ const password=document.getElementById('loginPass').value;
+ if(!username||!password){
+   o.className='status warn';
+   o.textContent='Informe usuário e senha.';
+   return;
+ }
+ o.className='status';
+ o.textContent='Entrando...';
+ try{
+   const r=await postBackend('login',{username,password},false);
+   if(!r||!r.ok)throw new Error((r&&r.error)||'Login inválido');
+   authState={token:r.token,user:r.user};
+   localStorage.setItem('okeo_auth_token_v39',r.token);
+   document.getElementById('loginOverlay').style.display='none';
+   o.textContent='';
+   applyRoleUI();
+   renderHomeDashboard();
+   showTab('inventario');
+   flushSyncQueue();
+ }catch(e){
+   console.error('Erro login OKEO:',e);
+   o.className='status warn';
+   o.textContent='Não foi possível entrar. Confira usuário, senha e conexão com a Base Central.';
+ }
+};
+
 function renderHomeDashboard(){
  try{
    const today=new Date(),month=today.toISOString().slice(0,7);
@@ -1294,12 +1322,19 @@ function renderHomeDashboard(){
    const gross=sm.revenue-sm.cmv,margin=sm.revenue?gross/sm.revenue*100:0;
    const st=totalStockMetrics();
    const set=(id,val)=>{const e=document.getElementById(id);if(e)e.textContent=val};
-   set('homeRevenue',brl(sm.revenue));set('homeTicket',brl(sm.avg));set('homeUnitsSold',sm.unitsSold.toLocaleString('pt-BR'));set('homeMargin',margin.toFixed(1).replace('.',',')+'%');
-   set('homeStock',st.qty.toLocaleString('pt-BR'));set('homeConsolRevenue',brl(sm.revenue));set('homeConsolSold',sm.unitsSold.toLocaleString('pt-BR'));set('homeConsolTicket',brl(sm.avg));set('homeConsolMargin',margin.toFixed(1).replace('.',',')+'%');
- }catch(e){}
+   set('homeRevenue',brl(sm.revenue));
+   set('homeTicket',brl(sm.avg));
+   set('homeUnitsSold',sm.unitsSold.toLocaleString('pt-BR'));
+   set('homeMargin',margin.toFixed(1).replace('.',',')+'%');
+   set('homeStock',st.qty.toLocaleString('pt-BR'));
+   set('homeConsolRevenue',brl(sm.revenue));
+   set('homeConsolSold',sm.unitsSold.toLocaleString('pt-BR'));
+   set('homeConsolTicket',brl(sm.avg));
+   set('homeConsolMargin',margin.toFixed(1).replace('.',',')+'%');
+ }catch(e){
+   console.warn('Dashboard inicial:',e);
+ }
 }
-(async()=>{if(await validateSession()){document.getElementById('loginOverlay').style.display='none';applyRoleUI();renderHomeDashboard();showTab('inventario');flushSyncQueue()}else{document.getElementById('loginOverlay').style.display='flex'}})();flushSyncQueue()}catch(e){o.className='status warn';o.textContent='Usuário ou senha inválidos.'}
-};
 
 async function renderUsers(){
  if(!authState.user||authState.user.role!=='ADMIN')return;
@@ -1328,4 +1363,21 @@ function totalStockMetrics(){
  return {qty,value,avg:qty?weighted/qty:0};
 }
 showTab('inventario');
+
+(async()=>{
+ try{
+   if(await validateSession()){
+     document.getElementById('loginOverlay').style.display='none';
+     applyRoleUI();
+     renderHomeDashboard();
+     showTab('inventario');
+     flushSyncQueue();
+   }else{
+     document.getElementById('loginOverlay').style.display='flex';
+   }
+ }catch(e){
+   console.error('Inicialização OKEO:',e);
+   document.getElementById('loginOverlay').style.display='flex';
+ }
+})();
 if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));</script></body></html>
