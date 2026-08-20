@@ -1,0 +1,31 @@
+OKEO GESTÃO V4.2.2
+
+CORREÇÕES:
+- Base histórica Abr-Jul/2026 passa a ser carregada antes das análises.
+- Curva ABC abre por padrão em 01/04/2026 a 31/07/2026 e OKEO Consolidado.
+- Status mostra quantos registros históricos estão ativos.
+- Botão para recarregar histórico sem duplicar.
+- Pesquisa de Grupos de Demanda é instantânea, por relevância e aceita múltiplas palavras.
+- OKEO Consolidado fica como padrão dos relatórios.
+
+DRE:
+VENDAS
+TAXA MÁQUINA
+IMPOSTOS
+ROYALTIES
+REPASSE COND.
+CMV
+COMBUSTÍVEL
+ENERGIA
+INTERNET
+CONTABILIDADE
+SISTEMA VM
+SEGURANÇA
+FACIAL
+PERCAS
+LUCRO LÍQUIDO
+
+- Vendas e CMV são automáticos, mas editáveis.
+- Demais linhas são digitáveis.
+- Valores ficam salvos por unidade + período.
+- Percentuais são calculados sobre Vendas.
