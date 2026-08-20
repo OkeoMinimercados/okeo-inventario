@@ -7,3 +7,7 @@ Depois da primeira abertura, o app pode funcionar offline.
 Leitor Bluetooth/USB em modo teclado continua compatível.
 
 Observação: a leitura nativa pela câmera depende do suporte do navegador à API BarcodeDetector; quando indisponível, use Chrome/Edge atualizado ou leitor externo.
+
+
+VERSÃO 2.1
+Botão Compartilhar CSV corrigido com fallback automático para download.
