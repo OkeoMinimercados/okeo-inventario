@@ -28,3 +28,10 @@ VERSÃO 2.4 — ESTOQUE + VALIDADE
 - Digitação manual da data como fallback.
 - Alertas de vencidos e até 7, 15, 30 e 60 dias.
 - CSV com validade, dias para vencer e status.
+
+
+VERSÃO 2.4.1 — CORREÇÃO DA CÂMERA DE VALIDADE
+- Libera automaticamente a câmera usada pelo leitor de EAN antes de abrir a câmera de validade.
+- Tenta primeiro a câmera traseira e depois qualquer câmera disponível.
+- Mensagens de erro mais específicas para permissão, câmera ocupada ou indisponível.
+- Limpeza mais segura da câmera ao fechar.

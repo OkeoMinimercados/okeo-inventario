@@ -1,7 +1,7 @@
 {
-  "name": "OKEO Inventário",
+  "name": "OKEO Estoque",
   "short_name": "OKEO Estoque",
-  "description": "Contagem de estoque por condomínio com leitura de código de barras.",
+  "description": "Gestão OKEO com importação manual e arquitetura pronta para API.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",
