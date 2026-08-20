@@ -11,3 +11,7 @@ Observação: a leitura nativa pela câmera depende do suporte do navegador à A
 
 VERSÃO 2.1
 Botão Compartilhar CSV corrigido com fallback automático para download.
+
+
+VERSÃO 2.2
+Removida a opção Compartilhar CSV. Mantida apenas a opção Finalizar e baixar CSV.
