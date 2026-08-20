@@ -1,0 +1,9 @@
+OKEO INVENTÁRIO PWA / HTTPS
+
+Publique a pasta inteira em um serviço com HTTPS, como GitHub Pages, Cloudflare Pages ou Netlify.
+No celular: abra o endereço, autorize a câmera, selecione o condomínio e use 'Usar câmera'.
+Para instalar como aplicativo: use 'Adicionar à Tela de Início'.
+Depois da primeira abertura, o app pode funcionar offline.
+Leitor Bluetooth/USB em modo teclado continua compatível.
+
+Observação: a leitura nativa pela câmera depende do suporte do navegador à API BarcodeDetector; quando indisponível, use Chrome/Edge atualizado ou leitor externo.

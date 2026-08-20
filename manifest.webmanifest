@@ -1,0 +1,19 @@
+{
+  "name": "OKEO Inventário",
+  "short_name": "OKEO Estoque",
+  "description": "Contagem de estoque por condomínio com leitura de código de barras.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#17365d",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
