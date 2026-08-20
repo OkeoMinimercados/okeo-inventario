@@ -1264,7 +1264,7 @@ async function postBackend(action,data={},withToken=true){
 async function getBackend(action,params={}){
  const u=new URL(backendUrl());u.searchParams.set('action',action);if(authState.token)u.searchParams.set('token',authState.token);
  Object.entries(params).forEach(([k,v])=>u.searchParams.set(k,v));
- const r=await fetch(u.toString(),{cache:'no-store'});return await r.json();
+ const ctrl=new AbortController();const timer=setTimeout(()=>ctrl.abort(),12000);try{const r=await fetch(u.toString(),{cache:'no-store',signal:ctrl.signal});return await r.json()}finally{clearTimeout(timer)}
 }
 function queueSync(action,data){
  syncQueue.push({id:String(Date.now())+Math.random(),action,data,createdAt:new Date().toISOString()});
@@ -1295,6 +1295,26 @@ async function validateSession(){
 }
 
 document.getElementById('loginPass').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('loginBtn').click()});
+
+async function sha256Hex(text){
+ const data=new TextEncoder().encode(String(text));
+ const buf=await crypto.subtle.digest('SHA-256',data);
+ return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+async function loginWithChallenge(username,password){
+ const c=await getBackend('login_challenge',{username});
+ if(!c||!c.ok)throw new Error((c&&c.error)||'Não foi possível iniciar o login.');
+ const passHash=await sha256Hex(String(c.salt||'')+'|'+String(password||''));
+ const proof=await sha256Hex(String(c.nonce||'')+'|'+passHash);
+ const r=await getBackend('login_verify',{username,nonce:c.nonce,proof});
+ if(!r||!r.ok)throw new Error((r&&r.error)||'Usuário ou senha inválidos.');
+ return r;
+}
+async function saveUserWithHash(data){
+ const salt=(crypto.randomUUID?crypto.randomUUID():String(Date.now())+Math.random()).replace(/-/g,'');
+ const passwordHash=await sha256Hex(salt+'|'+String(data.password||''));
+ return await getBackend('user_save_hashed',{username:data.username,name:data.name,role:data.role,active:data.active!==false?'1':'0',salt,passwordHash});
+}
 document.getElementById('loginBtn').onclick=async()=>{
  const o=document.getElementById('loginMsg');
  const username=document.getElementById('loginUser').value.trim();
@@ -1307,7 +1327,7 @@ document.getElementById('loginBtn').onclick=async()=>{
  o.className='status';
  o.textContent='Entrando...';
  try{
-   const r=await postBackend('login',{username,password},false);
+   const r=await loginWithChallenge(username,password);
    if(!r||!r.ok)throw new Error((r&&r.error)||'Login inválido');
    authState={token:r.token,user:r.user};
    localStorage.setItem('okeo_auth_token_v39',r.token);
@@ -1353,7 +1373,7 @@ document.getElementById('refreshUsersBtn').onclick=renderUsers;
 document.getElementById('saveUserBtn').onclick=async()=>{
  const o=document.getElementById('userSaveMsg');
  const data={username:document.getElementById('newUserLogin').value.trim(),name:document.getElementById('newUserName').value.trim(),password:document.getElementById('newUserPassword').value,role:document.getElementById('newUserRole').value,active:true};
- try{const r=await postBackend('user_save',data,true);if(!r.ok)throw 0;o.className='status ok';o.textContent='Usuário salvo.';renderUsers()}catch(e){o.className='status warn';o.textContent='Não foi possível salvar.'}
+ try{const r=await saveUserWithHash(data);if(!r.ok)throw 0;o.className='status ok';o.textContent='Usuário salvo.';renderUsers()}catch(e){o.className='status warn';o.textContent='Não foi possível salvar.'}
 };
 
 // Totalizador

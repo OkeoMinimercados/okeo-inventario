@@ -163,9 +163,48 @@ function bootstrapAdmin(username,name,password){const sh=SpreadsheetApp.getActiv
    WEB APP
    ========================= */
 
+
+function loginChallenge_(username){
+ username=String(username||'').trim().toLowerCase();
+ const users=values_(SpreadsheetApp.getActive().getSheetByName(SHEETS.users));
+ const u=users.find(r=>String(r[0]||'').trim().toLowerCase()===username&&r[5]!==false);
+ if(!u)return{ok:false,error:'Usuário ou senha inválidos'};
+ const nonce=Utilities.getUuid().replace(/-/g,'')+Utilities.getUuid().replace(/-/g,'');
+ CacheService.getScriptCache().put('login_nonce_'+username,nonce,300);
+ return{ok:true,username,salt:String(u[4]||''),nonce};
+}
+function loginVerify_(username,nonce,proof){
+ username=String(username||'').trim().toLowerCase();nonce=String(nonce||'');proof=String(proof||'').toLowerCase();
+ const cache=CacheService.getScriptCache(),expectedNonce=cache.get('login_nonce_'+username);
+ if(!expectedNonce||expectedNonce!==nonce)return{ok:false,error:'Desafio de login expirado. Tente novamente.'};
+ const users=values_(SpreadsheetApp.getActive().getSheetByName(SHEETS.users));
+ const u=users.find(r=>String(r[0]||'').trim().toLowerCase()===username&&r[5]!==false);
+ if(!u)return{ok:false,error:'Usuário ou senha inválidos'};
+ const expected=sha256Text_(nonce+'|'+String(u[3]||''));
+ if(expected!==proof)return{ok:false,error:'Usuário ou senha inválidos'};
+ cache.remove('login_nonce_'+username);
+ const token=Utilities.getUuid().replace(/-/g,'')+Utilities.getUuid().replace(/-/g,''),exp=new Date(Date.now()+12*60*60*1000);
+ SpreadsheetApp.getActive().getSheetByName(SHEETS.sessions).appendRow([token,String(u[0]),String(u[2]||'OPERATIONAL'),exp,new Date()]);
+ return{ok:true,token,user:{username:String(u[0]),name:String(u[1]||u[0]),role:String(u[2]||'OPERATIONAL')}};
+}
+function sha256Text_(text){
+ const bytes=Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256,String(text),Utilities.Charset.UTF_8);
+ return bytes.map(function(b){const v=(b<0?b+256:b).toString(16);return v.length===1?'0'+v:v}).join('');
+}
+function saveUserHashed_(d){
+ const sh=SpreadsheetApp.getActive().getSheetByName(SHEETS.users),username=String(d.username||'').trim().toLowerCase(),name=String(d.name||'').trim(),role=String(d.role||'OPERATIONAL');
+ if(!username||!name||!d.passwordHash||!d.salt)throw new Error('Dados obrigatórios');
+ if(['ADMIN','OPERATIONAL'].indexOf(role)<0)throw new Error('Perfil inválido');
+ const rows=values_(sh);let row=0;for(let i=0;i<rows.length;i++)if(String(rows[i][0]).toLowerCase()===username){row=i+2;break}
+ const v=[username,name,role,String(d.passwordHash),String(d.salt),String(d.active)!=='0',new Date()];
+ if(row)sh.getRange(row,1,1,v.length).setValues([v]);else sh.appendRow(v);
+}
 function doGet(e){
  try{
   const action=String((e&&e.parameter&&e.parameter.action)||'status').toLowerCase(),token=String((e&&e.parameter&&e.parameter.token)||'');
+  if(action==='login_challenge')return json_(loginChallenge_(String(e.parameter.username||'')));
+  if(action==='login_verify')return json_(loginVerify_(String(e.parameter.username||''),String(e.parameter.nonce||''),String(e.parameter.proof||'')));
+  if(action==='user_save_hashed'){requireAuth_(token,['ADMIN']);saveUserHashed_({username:e.parameter.username,name:e.parameter.name,role:e.parameter.role,active:e.parameter.active,salt:e.parameter.salt,passwordHash:e.parameter.passwordHash});return json_({ok:true});}
   if(action==='status')return json_({ok:true,app:'OKEO Base Central',version:'1.1-auth'});
   if(action==='session'){const u=session_(token);return json_(u?{ok:true,user:u}:{ok:false,error:'Sessão inválida'})}
   if(action==='users'){requireAuth_(token,['ADMIN']);return json_({ok:true,users:listUsers_()})}
