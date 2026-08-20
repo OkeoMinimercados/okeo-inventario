@@ -47,7 +47,7 @@ main{max-width:1180px!important}
 .consolidatedNote{padding:12px 15px;background:#f8fbf9;color:#376246;font-size:12px;border-top:1px solid #e2ebe5}
 @media(max-width:900px){.kpiGrid,.moduleGrid{grid-template-columns:repeat(2,1fr)}.consolidatedMetrics{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.kpiGrid,.moduleGrid{grid-template-columns:1fr}.consolidatedMetrics{grid-template-columns:1fr}.consolidatedMetrics>div{border-right:0;border-bottom:1px solid #edf0f2}.homeHero{display:none}}
-.roleAccessBanner{margin:10px 0;padding:10px 12px;border-radius:10px;background:#fff3cd;border:1px solid #f3d98b;color:#745b00;font-size:13px;font-weight:700}</style>
+.roleAccessBanner{margin:10px 0;padding:10px 12px;border-radius:10px;background:#fff3cd;border:1px solid #f3d98b;color:#745b00;font-size:13px;font-weight:700}.dreEditHeader,.dreEditRow{display:grid;grid-template-columns:1.3fr .8fr .45fr;gap:8px;align-items:center;padding:9px 6px;border-top:1px solid #e5e9ed}.dreEditHeader{background:#17365d;color:#fff;border-radius:8px;border-top:0}.dreEditRow input{margin:0!important;text-align:right}.dreEditRow.total{background:#e8f5e9;font-size:16px}.historyStatus{margin:7px 0;padding:7px 9px;border-radius:8px;font-size:12px}.historyStatus.ok{background:#e8f5e9;color:#246b43}.historyStatus.warn{background:#fff3cd;color:#725600}</style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
@@ -208,8 +208,19 @@ main{max-width:1180px!important}
 </div>
 
 <div id="tab-dre" class="appTab" style="display:none">
-  <div class="card"><b>DRE Gerencial</b><div class="row"><div><label>De</label><input id="dreFrom" type="date"></div><div><label>Até</label><input id="dreTo" type="date"></div></div><label>Unidade</label><select id="dreUnit"></select><button class="gray" id="refreshDre">Atualizar DRE</button></div>
-  <div class="card"><div class="dreRow"><span>Receita Bruta</span><b id="dreRevenue">R$ 0,00</b></div><div class="dreRow"><span>(-) CMV</span><b id="dreCmv">R$ 0,00</b></div><div class="dreRow"><span>= Lucro Bruto</span><b id="dreGross">R$ 0,00</b></div><div class="dreRow"><span>(-) Taxas / Impostos</span><b id="dreTaxes">R$ 0,00</b></div><div class="dreRow"><span>(-) Despesas Operacionais</span><b id="dreOpex">R$ 0,00</b></div><div class="dreRow"><span>(-) Perdas / Quebras / Furtos</span><b id="dreLoss">R$ 0,00</b></div><div class="dreRow total"><span>= Resultado Operacional</span><b id="dreResult">R$ 0,00</b></div><div class="dreRow"><span>Margem Bruta</span><b id="dreGrossMargin">0,0%</b></div><div class="dreRow"><span>Margem Operacional</span><b id="dreOpMargin">0,0%</b></div></div>
+  <div class="card">
+    <b>DRE Gerencial</b>
+    <div class="muted">Vendas e CMV são calculados automaticamente pelas vendas do período. Todos os valores podem ser ajustados e salvos por período e unidade.</div>
+    <div class="row"><div><label>De</label><input id="dreFrom" type="date"></div><div><label>Até</label><input id="dreTo" type="date"></div></div>
+    <label>Unidade</label><select id="dreUnit"></select>
+    <div class="actions"><button class="gray" id="dreLoadAuto">Carregar Vendas/CMV</button><button class="green" id="dreSave">Salvar DRE</button><button class="gray" id="refreshDre">Recalcular</button></div>
+    <div id="dreMsg" class="status"></div>
+  </div>
+  <div class="card">
+    <div class="dreEditHeader"><b>DRE</b><b>Valor</b><b>%</b></div>
+    <div id="dreEditRows"></div>
+    <div class="dreEditRow total"><span>LUCRO LÍQUIDO</span><b id="dreNet">R$ 0,00</b><b id="dreNetPct">0,0%</b></div>
+  </div>
 </div>
 
 <div id="tab-faturamento" class="appTab" style="display:none">
@@ -227,11 +238,11 @@ main{max-width:1180px!important}
 
 <div id="tab-produtos" class="appTab" style="display:none">
   <div class="card">
-    <b>Análise de Produtos / Curva ABC</b>
+    <b>Análise de Produtos / Curva ABC</b><div class="muted">Base de gestão: abril a julho/2026. OKEO Consolidado considera todos os condomínios e exclui o CD das vendas.</div><div id="historyStatus" class="historyStatus">Carregando histórico...</div>
     <div class="row"><div><label>De</label><input id="prodFrom" type="date"></div><div><label>Até</label><input id="prodTo" type="date"></div></div>
     <label>Unidade</label><select id="prodUnit"></select>
     <label>Ordenar por</label><select id="prodSort"><option value="revenue">Venda R$</option><option value="cmv">CMV R$</option><option value="margin">Margem R$</option><option value="qty">Quantidade</option></select>
-    <button class="gray" id="refreshProducts">Atualizar análise</button>
+    <div class="actions"><button class="gray" id="refreshProducts">Atualizar análise</button><button class="gray" id="reloadHistory">Recarregar histórico</button></div>
   </div>
   <div class="card">
     <div class="row"><div><small>Venda total</small><div class="big" id="prodRevenue">R$ 0,00</div></div><div><small>CMV total</small><div class="big" id="prodCmv">R$ 0,00</div></div></div>
@@ -413,7 +424,7 @@ main{max-width:1180px!important}
 </div>
 
 <div id="tab-mensal" class="appTab" style="display:none">
-  <div class="card"><b>Histórico Mensal</b><div class="muted">Fechamentos preservados mês a mês.</div><label>Unidade</label><select id="monthlyUnit"></select><button class="gray" id="refreshMonthly">Atualizar histórico</button></div>
+  <div class="card"><b>Histórico Mensal</b><div class="muted">Calculado diretamente sobre as vendas históricas e importações manuais.</div><label>Unidade</label><select id="monthlyUnit"></select><button class="gray" id="refreshMonthly">Atualizar histórico</button></div>
   <div class="card"><div id="monthlyHistoryTable"></div></div>
 </div>
 <div id="tab-cashback" class="appTab" style="display:none">
@@ -594,7 +605,8 @@ window.showTab=showTab;
 function fillUnitSelect(id,blank=false){const s=document.getElementById(id);if(!s)return;s.innerHTML=(blank?'<option value="">Nenhuma / externa</option>':'')+units.map(u=>`<option value="${u}">${u}</option>`).join('')}
 ['moveFrom','moveTo','stockUnit','nfUnit','dashUnit'].forEach(id=>fillUnitSelect(id,id==='moveFrom'||id==='moveTo'));
 
-function masterProduct(e){const n=norm(e);return PRODUCTS.find(p=>norm(p.ean)===n||String(p.ean_adicional||'').split(/[,;| ]+/).some(x=>norm(x)===n))}
+function masterProduct(e){const n=norm(e);return PRODUCTS.find(p=>norm(p.ean)===n||norm(p.codigo)===n||String(p.ean_adicional||'').split(/[,;| ]+/).some(x=>norm(x)===n))}
+function saleMasterProduct(x){const p=masterProduct(x.code||x.ean||'');if(p)return p;const n=String(x.product||'').trim().toLowerCase();return PRODUCTS.find(p=>String(p.produto||'').trim().toLowerCase()===n)||null}
 function sk(u,e){return u+'|'+norm(e)}
 function gs(u,e){return stockLedger[sk(u,e)]||{qty:0,avgCost:0}}
 function ss(u,e,q,c){stockLedger[sk(u,e)]={qty:Math.max(0,Number(q)||0),avgCost:Math.max(0,Number(c)||0)};localStorage.setItem('okeo_stock_v3',JSON.stringify(stockLedger))}
@@ -643,6 +655,32 @@ document.getElementById('nfPost').onclick=()=>{const u=document.getElementById('
 // ---------------- FINANCEIRO / DRE / FATURAMENTO / PRODUTOS ----------------
 let cashEntries=JSON.parse(localStorage.getItem('okeo_cash_v32')||'[]');
 let salesRows=JSON.parse(localStorage.getItem('okeo_sales_v32')||'[]');
+let historicalSalesRows=[];
+let historyReady=false;
+const HISTORY_START='2026-04-01',HISTORY_END='2026-07-31';
+function setHistoryStatus(msg,ok=true){const e=document.getElementById('historyStatus');if(e){e.textContent=msg;e.className='historyStatus '+(ok?'ok':'warn')}}
+async function loadHistoricalSales(force=false){
+ if(historyReady&&!force)return historicalSalesRows.length;
+ setHistoryStatus('Carregando histórico Abr–Jul/2026...');
+ const r=await fetch('./historico-vendas-abr-jul-2026.min.json?v=423',{cache:'no-store'});
+ if(!r.ok)throw new Error('arquivo histórico não encontrado');
+ const rows=await r.json();
+ historicalSalesRows=rows.map(a=>({datetime:a[0],unit:a[1],machine:a[2],code:String(a[3]||''),product:a[4],qty:Number(a[5]||0),value:Number(a[6]||0),source:'HISTORICO_ABR_JUL_2026'}));
+ historyReady=true;
+ setHistoryStatus(`Base histórica ativa: ${historicalSalesRows.length.toLocaleString('pt-BR')} registros.`);
+ return historicalSalesRows.length;
+}
+function analysisSalesRows(){
+ const out=[],seen=new Set();
+ [...historicalSalesRows,...salesRows].forEach(x=>{const fp=saleFingerprint(x);if(!seen.has(fp)){seen.add(fp);out.push(x)}});
+ return out;
+}
+function setAnalysisDefaults(){
+ [['prodFrom',HISTORY_START],['prodTo',HISTORY_END],['dreFrom',HISTORY_START],['dreTo',HISTORY_END]].forEach(([id,v])=>{const e=document.getElementById(id);if(e&&!e.value)e.value=v});
+ const rw=document.getElementById('replWeeks');if(rw)rw.value='16';
+ const tw=document.getElementById('timeWeeks');if(tw)tw.value='16';
+}
+
 
 function brl(v){return Number(v||0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'})}
 function parseMoney(v){if(typeof v==='number')return v;let s=String(v??'').trim();if(!s)return 0;s=s.replace(/\s/g,'').replace(/R\$/gi,'');if(s.includes(',')&&s.includes('.'))s=s.replace(/\./g,'').replace(',','.');else if(s.includes(','))s=s.replace(',','.');return Number(s)||0}
@@ -730,21 +768,25 @@ document.getElementById('importSales').onclick=async()=>{
  }
 };
 function salesMetrics(unit='',from='',to=''){
- const rows=salesRows.filter(x=>{
-   const d=String(x.datetime).slice(0,10);
-   const isCd=String(x.unit).toLowerCase().includes('cd - estoque central');
-   const unitOk=!unit||unit===TOTAL_UNIT?(!isCd):x.unit===unit;
-   return unitOk&&(!from||d>=from)&&(!to||d<=to)
+ const rows=analysisSalesRows().filter(x=>{
+   const d=String(x.datetime).slice(0,10),isCd=String(x.unit).toLowerCase().includes('cd - estoque central');
+   const unitOk=!unit||unit===TOTAL_UNIT?!isCd:x.unit===unit;
+   return unitOk&&(!from||d>=from)&&(!to||d<=to);
  });
  const revenue=rows.reduce((a,x)=>a+(Number(x.value)||0),0),unitsSold=rows.reduce((a,x)=>a+(Number(x.qty)||0),0),tickets=new Set(rows.map(x=>x.unit+'|'+normalizeDateTime(x.datetime))).size;
- let cmv=0;rows.forEach(x=>{const p=masterProduct(x.code),e=p?p.ean:x.code;if(e){const s=gs(x.unit,e);cmv+=(Number(x.qty)||0)*(Number(s.avgCost)||0)}});
- return{rows,revenue,unitsSold,tickets,avg:tickets?revenue/tickets:0,cmv}
+ let cmv=0;rows.forEach(x=>{const p=saleMasterProduct(x),e=p?p.ean:(x.ean||x.code);if(e)cmv+=(Number(x.qty)||0)*(Number(gs(x.unit,e).avgCost)||0)});
+ return{rows,revenue,unitsSold,tickets,avg:tickets?revenue/tickets:0,cmv};
 }
 function renderSalesHistory(){const m=salesMetrics();document.getElementById('histRevenue').textContent=brl(m.revenue);document.getElementById('histTickets').textContent=m.tickets.toLocaleString('pt-BR');document.getElementById('histAvgTicket').textContent=brl(m.avg);document.getElementById('histUnits').textContent=m.unitsSold.toLocaleString('pt-BR');const by={};m.rows.forEach(x=>{const k=String(x.datetime).slice(0,7)||'Sem mês';if(!by[k])by[k]={r:0,t:new Set()};by[k].r+=Number(x.value)||0;by[k].t.add(x.unit+'|'+normalizeDateTime(x.datetime))});document.getElementById('salesByMonth').innerHTML=Object.entries(by).sort((a,b)=>b[0].localeCompare(a[0])).map(([k,v])=>`<div class="monthrow"><b>${k}</b><span>${brl(v.r)}</span><span>${v.t.size} tickets</span></div>`).join('')||'<small>Sem vendas importadas.</small>'}
 
 function expenseBetween(from,to){return cashEntries.filter(x=>x.type==='SAIDA'&&(!from||x.date>=from)&&(!to||x.date<=to)).reduce((a,x)=>{const v=Number(x.value)||0,c=String(x.category||'');if(['Taxas','Impostos','Royalties'].includes(c))a.taxes+=v;else if(c==='Perdas')a.loss+=v;else if(c!=='Compra de Mercadoria'&&c!=='CMV')a.opex+=v;return a},{taxes:0,loss:0,opex:0})}
-function renderDre(){const f=document.getElementById('dreFrom').value,t=document.getElementById('dreTo').value,u=document.getElementById('dreUnit').value||'',sm=salesMetrics(u,f,t),ex=expenseBetween(f,t),movementLoss=movements.filter(m=>(!u||m.from===u||m.to===u)&&['PERDA','QUEBRA','FURTO','VENCIMENTO'].includes(m.type)).reduce((a,m)=>a+(Number(m.qty)||0)*(Number(gs(m.from||m.to,m.ean).avgCost)||Number(m.unitCost)||0),0),gross=sm.revenue-sm.cmv,result=gross-ex.taxes-ex.opex-ex.loss-movementLoss;document.getElementById('dreRevenue').textContent=brl(sm.revenue);document.getElementById('dreCmv').textContent=brl(sm.cmv);document.getElementById('dreGross').textContent=brl(gross);document.getElementById('dreTaxes').textContent=brl(ex.taxes);document.getElementById('dreOpex').textContent=brl(ex.opex);document.getElementById('dreLoss').textContent=brl(ex.loss+movementLoss);document.getElementById('dreResult').textContent=brl(result);document.getElementById('dreGrossMargin').textContent=(sm.revenue?gross/sm.revenue*100:0).toFixed(1).replace('.',',')+'%';document.getElementById('dreOpMargin').textContent=(sm.revenue?result/sm.revenue*100:0).toFixed(1).replace('.',',')+'%'}
-fillUnitSelectWithTotal('dreUnit',true,false);document.getElementById('refreshDre').onclick=renderDre;
+const DRE_LINES=[['sales','VENDAS'],['machine','TAXA MÁQUINA'],['taxes','IMPOSTOS'],['royalties','ROYALTIES'],['condo','REPASSE COND.'],['cmv','CMV'],['fuel','COMBUSTÍVEL'],['energy','ENERGIA'],['internet','INTERNET'],['accounting','CONTABILIDADE'],['vm','SISTEMA VM'],['security','SEGURANÇA'],['facial','FACIAL'],['losses','PERCAS']];
+let dreCustom=JSON.parse(localStorage.getItem('okeo_dre_custom_v423')||'{}');
+function dreKey(){return [document.getElementById('dreFrom').value,document.getElementById('dreTo').value,document.getElementById('dreUnit').value||TOTAL_UNIT].join('|')}
+function dreAuto(){const sm=salesMetrics(document.getElementById('dreUnit').value||TOTAL_UNIT,document.getElementById('dreFrom').value,document.getElementById('dreTo').value);return{sales:sm.revenue,cmv:sm.cmv}}
+function renderDre(useAuto=false){fillAnalysisUnitSelect('dreUnit');const saved=dreCustom[dreKey()]||{},auto=dreAuto();document.getElementById('dreEditRows').innerHTML=DRE_LINES.map(([k,l])=>{let v=saved[k];if(v===undefined||useAuto){if(k==='sales'||k==='cmv')v=auto[k]||0;else if(v===undefined)v=0}return `<div class="dreEditRow"><span>${l}</span><input class="dreMoney" id="dre_${k}" type="number" step="0.01" value="${Number(v||0).toFixed(2)}"><b id="drePct_${k}">0,0%</b></div>`}).join('');document.querySelectorAll('.dreMoney').forEach(e=>e.addEventListener('input',calcDre));calcDre()}
+function calcDre(){const v={};DRE_LINES.forEach(([k])=>v[k]=parseMoney(document.getElementById('dre_'+k)?.value));const sales=v.sales||0;let net=sales;DRE_LINES.slice(1).forEach(([k])=>net-=Math.abs(v[k]||0));DRE_LINES.forEach(([k])=>{const e=document.getElementById('drePct_'+k);if(e)e.textContent=(sales?Math.abs(v[k]||0)/sales*100:0).toFixed(1).replace('.',',')+'%'});document.getElementById('dreNet').textContent=brl(net);document.getElementById('dreNetPct').textContent=(sales?net/sales*100:0).toFixed(1).replace('.',',')+'%';return{...v,net}}
+document.getElementById('refreshDre').onclick=async()=>{await loadHistoricalSales(false);renderDre(false)};document.getElementById('dreLoadAuto').onclick=async()=>{await loadHistoricalSales(false);renderDre(true)};document.getElementById('dreSave').onclick=()=>{dreCustom[dreKey()]={...calcDre(),savedAt:new Date().toISOString()};localStorage.setItem('okeo_dre_custom_v423',JSON.stringify(dreCustom));const o=document.getElementById('dreMsg');o.className='status ok';o.textContent='DRE salva.'};['dreFrom','dreTo','dreUnit'].forEach(id=>document.getElementById(id)?.addEventListener('change',()=>renderDre(false)));
 
 function productMetrics(unit='',from='',to=''){
  const rows=salesMetrics(unit,from,to).rows,totalRevenue=rows.reduce((a,x)=>a+(Number(x.value)||0),0),map={};
@@ -759,9 +801,9 @@ function renderProductAnalysis(){
  document.getElementById('prodRevenue').textContent=brl(pm.totalRevenue);document.getElementById('prodCmv').textContent=brl(pm.totalCmv);document.getElementById('prodMargin').textContent=brl(pm.totalRevenue-pm.totalCmv);document.getElementById('prodSkus').textContent=arr.length;
  document.getElementById('productTable').innerHTML=arr.map(x=>`<div class="abcrow abc${x.abc}"><div><b>${x.product}</b><br><small>${x.code||''} • ${x.qty} un • margem ${brl(x.margin)}</small></div><div><b>${brl(x.revenue)}</b><br><small>${x.salesPct.toFixed(1).replace('.',',')}% venda</small></div><div><b>${brl(x.cmv)}</b><br><small>${x.cmvPct.toFixed(1).replace('.',',')}% CMV</small></div><div class="abcClass">${x.abc}<br><small>${x.accPct.toFixed(1).replace('.',',')}%</small></div></div>`).join('')||'<small>Sem vendas no período.</small>';
 }
-fillUnitSelectWithTotal('prodUnit',true,false);document.getElementById('refreshProducts').onclick=renderProductAnalysis;
+fillAnalysisUnitSelect('prodUnit');document.getElementById('refreshProducts').onclick=renderProductAnalysis;
 
-try{const td=new Date(),fd=new Date(td.getFullYear(),td.getMonth(),1),f=fd.toISOString().slice(0,10),t=td.toISOString().slice(0,10);document.getElementById('dreFrom').value=f;document.getElementById('dreTo').value=t;document.getElementById('prodFrom').value=f;document.getElementById('prodTo').value=t}catch(e){}
+setAnalysisDefaults();
 
 
 // ---------------- GRUPOS DE DEMANDA V4 ----------------
@@ -783,16 +825,12 @@ function uniqueMasterProducts(){
  PRODUCTS.forEach(p=>{const e=norm(p.ean);if(e&&!m[e])m[e]=p});
  return Object.values(m);
 }
+function searchNorm(v){return String(v||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim()}
 function filteredGroupProducts(){
- const q=(document.getElementById('groupSearch')?.value||'').toLowerCase();
- const filter=document.getElementById('groupFilter')?.value||'ALL';
- return uniqueMasterProducts().filter(p=>{
-   const e=norm(p.ean),g=productGroup[e];
-   if(filter==='UNGROUPED'&&g)return false;
-   if(filter==='GROUPED'&&!g)return false;
-   if(!q)return true;
-   return [p.produto,p.fabricante,p.categoria,e].some(v=>String(v||'').toLowerCase().includes(q));
- }).slice(0,500);
+ const raw=(document.getElementById('groupSearch')?.value||'').trim(),filter=document.getElementById('groupFilter')?.value||'ALL';if(!raw)return[];
+ const q=searchNorm(raw),tokens=q.split(/\s+/).filter(Boolean),ranked=[];
+ uniqueMasterProducts().forEach(p=>{const e=norm(p.ean),g=productGroup[e];if(filter==='UNGROUPED'&&g)return;if(filter==='GROUPED'&&!g)return;const name=searchNorm(p.produto),maker=searchNorm(p.fabricante),cat=searchNorm(p.categoria),ean=searchNorm(e),hay=[name,maker,cat,ean].join(' ');if(!tokens.every(t=>hay.includes(t)))return;let score=0;if(name===q||ean===q)score+=100;if(name.startsWith(q)||ean.startsWith(q))score+=50;if(name.includes(q))score+=25;tokens.forEach(t=>{if(name.startsWith(t))score+=10;if(name.includes(t))score+=4});ranked.push({p,score})});
+ return ranked.sort((a,b)=>b.score-a.score||String(a.p.produto).localeCompare(String(b.p.produto),'pt-BR')).slice(0,250).map(x=>x.p);
 }
 function updateGroupSelectionCount(){
  const el=document.getElementById('groupSelectionCount');
@@ -817,7 +855,7 @@ function renderDemandGroups(){
        <div><b>${p.produto}</b><br><small>${e}${p.fabricante?' • '+p.fabricante:''}${p.categoria?' • '+p.categoria:''}</small></div>
        <div><small>${g?g.name:'Individual'}</small></div>
      </div>`;
-   }).join('')||'<small>Nenhum produto encontrado.</small>';
+   }).join('')||'<div style="padding:12px"><small>Digite uma palavra, marca, categoria ou EAN para localizar produtos.</small></div>';
  }
  updateGroupSelectionCount();
 
@@ -878,10 +916,10 @@ const HOUR_BUCKETS=['00-05','06-08','09-11','12-14','15-17','18-20','21-23'];
 function hourBucket(h){if(h<=5)return'00-05';if(h<=8)return'06-08';if(h<=11)return'09-11';if(h<=14)return'12-14';if(h<=17)return'15-17';if(h<=20)return'18-20';return'21-23'}
 function timeRows(){
  const weeks=Number(document.getElementById('timeWeeks').value)||16,cut=cutoffDate(weeks),unit=document.getElementById('timeUnit').value||'',ean=selectedTimeEan;
- return salesRows.filter(x=>{const d=parseSaleDate(x.datetime),p=masterProduct(x.code),e=norm(p?p.ean:x.code);return d&&d>=cut&&(!unit||x.unit===unit)&&(!ean||e===ean)});
+ return analysisSalesRows().filter(x=>{const d=parseSaleDate(x.datetime),p=masterProduct(x.code),e=norm(p?p.ean:x.code);return d&&d>=cut&&(!unit||unit===TOTAL_UNIT||x.unit===unit)&&(!ean||e===ean)});
 }
 function renderTimeAnalysis(){
- fillUnitSelectWithTotal('timeUnit',true,false);
+ fillAnalysisUnitSelect('timeUnit');
  const rows=timeRows(),days={},hours={},heat={};
  DAY_NAMES.forEach(d=>{days[d]=0;heat[d]={};HOUR_BUCKETS.forEach(h=>heat[d][h]=0)});HOUR_BUCKETS.forEach(h=>hours[h]=0);
  rows.forEach(x=>{const d=salesDateObj(x.datetime);if(!d)return;const day=DAY_NAMES[d.getDay()],hb=hourBucket(d.getHours()),q=Number(x.qty)||0;days[day]+=q;hours[hb]+=q;heat[day][hb]+=q});
@@ -940,7 +978,7 @@ function salesForReplenishment(weeks,unit=''){
  salesRows.forEach(x=>{
    const date=String(x.datetime).slice(0,10);
    if(!date||date<cutoff)return;
-   if(unit&&x.unit!==unit)return;
+   if(unit&&unit!==TOTAL_UNIT&&x.unit!==unit)return;
    let p=masterProduct(x.code);
    let ean=p?p.ean:String(x.code||'').replace(/\D/g,'');
    if(!ean)return;
@@ -978,7 +1016,7 @@ function calculateReplenishment(){
  return result;
 }
 function refreshReplFilters(){
- fillUnitSelectWithTotal('replUnit',true,false);
+ fillAnalysisUnitSelect('replUnit');
  const sel=document.getElementById('replSupplier');
  const prev=sel.value;
  const sups=['',...Array.from(new Set(Object.values(supplierMap).filter(Boolean))).sort()];
@@ -1061,11 +1099,21 @@ refreshReplFilters();
 let monthlyClosings=JSON.parse(localStorage.getItem('okeo_monthly_closings_v36')||'{}');
 let paymentHistory=JSON.parse(localStorage.getItem('okeo_payment_history_v36')||'[]');
 function closingKey(month,unit){return month+'|'+(unit||'TODAS')}
-function monthlyMetrics(month,unit=''){const rows=salesRows.filter(x=>rowMonth(x)===month&&(!unit||x.unit===unit)),revenue=rows.reduce((a,x)=>a+(Number(x.value)||0),0),unitsSold=rows.reduce((a,x)=>a+(Number(x.qty)||0),0),tickets=new Set(rows.map(x=>x.unit+'|'+normalizeDateTime(x.datetime))).size;let cmv=0;rows.forEach(x=>{const p=masterProduct(x.code),ean=norm(p?p.ean:x.code);if(ean)cmv+=(Number(x.qty)||0)*(Number(gs(x.unit,ean).avgCost)||0)});const gross=revenue-cmv;return{month,unit:unit||'TODAS',revenue,unitsSold,tickets,avgTicket:tickets?revenue/tickets:0,cmv,gross,grossMargin:revenue?gross/revenue*100:0,closedAt:new Date().toISOString()}}
-function saveMonthlyClosing(month){if(!month)return;const us=Array.from(new Set(salesRows.filter(x=>rowMonth(x)===month).map(x=>x.unit).filter(Boolean)));monthlyClosings[closingKey(month,'')]=monthlyMetrics(month,'');us.forEach(u=>monthlyClosings[closingKey(month,u)]=monthlyMetrics(month,u));localStorage.setItem('okeo_monthly_closings_v36',JSON.stringify(monthlyClosings))}
-function renderMonthlyHistory(){fillUnitSelectWithTotal('monthlyUnit',true,false);const u=document.getElementById('monthlyUnit').value||'',rows=Object.values(monthlyClosings).filter(x=>(u?x.unit===u:x.unit==='TODAS')).sort((a,b)=>b.month.localeCompare(a.month));document.getElementById('monthlyHistoryTable').innerHTML='<div class="monthrow2"><b>Mês</b><b>Faturamento</b><b>Tickets</b><b>Ticket médio</b><b>CMV</b><b>Margem</b></div>'+rows.map(x=>`<div class="monthrow2"><b>${x.month}</b><span>${brl(x.revenue)}</span><span>${x.tickets}</span><span>${brl(x.avgTicket)}</span><span>${brl(x.cmv)}</span><span>${Number(x.grossMargin||0).toFixed(1).replace('.',',')}%</span></div>`).join('')}
-document.getElementById('refreshMonthly').onclick=renderMonthlyHistory;document.getElementById('monthlyUnit').onchange=renderMonthlyHistory;
-function salesRevenueForMonthUnit(month,unit){const c=monthlyClosings[closingKey(month,unit)];if(c)return Number(c.revenue)||0;return salesRows.filter(x=>rowMonth(x)===month&&x.unit===unit).reduce((a,x)=>a+(Number(x.value)||0),0)}
+function monthlyMetrics(month,unit=''){
+ const rows=analysisSalesRows().filter(x=>rowMonth(x)===month&&(!unit||unit===TOTAL_UNIT||x.unit===unit)&&!String(x.unit).toLowerCase().includes('cd - estoque central'));
+ const revenue=rows.reduce((a,x)=>a+(Number(x.value)||0),0),unitsSold=rows.reduce((a,x)=>a+(Number(x.qty)||0),0),tickets=new Set(rows.map(x=>x.unit+'|'+normalizeDateTime(x.datetime))).size;
+ let cmv=0;rows.forEach(x=>{const p=saleMasterProduct(x),e=p?p.ean:(x.ean||x.code);if(e)cmv+=(Number(x.qty)||0)*(Number(gs(x.unit,e).avgCost)||0)});const gross=revenue-cmv;
+ return{month,unit:unit||TOTAL_UNIT,revenue,unitsSold,tickets,avgTicket:tickets?revenue/tickets:0,cmv,gross,grossMargin:revenue?gross/revenue*100:0};
+}
+function saveMonthlyClosing(month){if(!month)return;const us=Array.from(new Set(analysisSalesRows().filter(x=>rowMonth(x)===month).map(x=>x.unit).filter(Boolean)));monthlyClosings[closingKey(month,'')]=monthlyMetrics(month,TOTAL_UNIT);us.forEach(u=>monthlyClosings[closingKey(month,u)]=monthlyMetrics(month,u));localStorage.setItem('okeo_monthly_closings_v36',JSON.stringify(monthlyClosings))}
+function renderMonthlyHistory(){
+ fillAnalysisUnitSelect('monthlyUnit');const u=document.getElementById('monthlyUnit').value||TOTAL_UNIT;
+ const months=Array.from(new Set(analysisSalesRows().map(rowMonth).filter(Boolean))).sort().reverse();
+ const rows=months.map(m=>monthlyMetrics(m,u)).filter(x=>x.revenue||x.unitsSold);
+ document.getElementById('monthlyHistoryTable').innerHTML='<div class="monthrow2"><b>Mês</b><b>Faturamento</b><b>Tickets</b><b>Ticket médio</b><b>CMV</b><b>Margem</b></div>'+rows.map(x=>`<div class="monthrow2"><b>${x.month}</b><span>${brl(x.revenue)}</span><span>${x.tickets}</span><span>${brl(x.avgTicket)}</span><span>${brl(x.cmv)}</span><span>${Number(x.grossMargin||0).toFixed(1).replace('.',',')}%</span></div>`).join('');
+}
+document.getElementById('refreshMonthly').onclick=async()=>{await loadHistoricalSales(false);renderMonthlyHistory()};document.getElementById('monthlyUnit').onchange=renderMonthlyHistory;
+function salesRevenueForMonthUnit(month,unit){return monthlyMetrics(month,unit).revenue}
 function paymentCalc(){const month=document.getElementById('payMonth').value,unit=document.getElementById('payUnit').value,revenue=salesRevenueForMonthUnit(month,unit),pct=parseMoney(document.getElementById('payCashPct').value),prev=parseMoney(document.getElementById('payPrevRead').value),curr=parseMoney(document.getElementById('payCurrRead').value),rate=parseMoney(document.getElementById('payEnergyRate').value),kwh=Math.max(0,curr-prev),cash=revenue*pct/100,energy=kwh*rate,total=cash+energy;document.getElementById('payRevenue').value=revenue.toFixed(2);document.getElementById('cashbackValue').textContent=brl(cash);document.getElementById('energyKwh').textContent=kwh.toFixed(2)+' kWh';document.getElementById('energyValue').textContent=brl(energy);document.getElementById('paymentTotal').textContent=brl(total);return{month,unit,revenue,cashbackPct:pct,cashbackValue:cash,previousReading:prev,currentReading:curr,kwh,energyRate:rate,energyValue:energy,total,note:document.getElementById('payNote').value.trim()}}
 function latestPreviousReading(unit,month){const a=paymentHistory.filter(x=>x.unit===unit&&x.month<month).sort((a,b)=>b.month.localeCompare(a.month));return a.length?Number(a[0].currentReading)||0:0}
 function prefillPayment(){const month=document.getElementById('payMonth').value,unit=document.getElementById('payUnit').value;if(!month||!unit)return;const x=paymentHistory.find(x=>x.month===month&&x.unit===unit);if(x){document.getElementById('payCashPct').value=x.cashbackPct||0;document.getElementById('payPrevRead').value=x.previousReading||0;document.getElementById('payCurrRead').value=x.currentReading||0;document.getElementById('payEnergyRate').value=x.energyRate||0;document.getElementById('payNote').value=x.note||''}else{document.getElementById('payPrevRead').value=latestPreviousReading(unit,month)||''}paymentCalc()}
@@ -1401,11 +1449,8 @@ document.getElementById('saveUserBtn').onclick=async()=>{
 // Totalizador
 function allSalesUnits(){return units.filter(u=>u!==TOTAL_UNIT&&!String(u).toLowerCase().includes('cd - estoque central'))}
 function stockUnitsIncludingCd(){return units.filter(u=>u!==TOTAL_UNIT)}
-function fillUnitSelectWithTotal(id,blank=false,includeCd=true){
- const s=document.getElementById(id);if(!s)return;
- const list=[TOTAL_UNIT,...(includeCd?stockUnitsIncludingCd():allSalesUnits())];
- s.innerHTML=(blank?'<option value="">Todas as unidades de venda</option>':'')+list.map(u=>`<option value="${u}">${u}</option>`).join('');
-}
+function fillUnitSelectWithTotal(id,blank=false,includeCd=true){const s=document.getElementById(id);if(!s)return;const base=(includeCd?stockUnitsIncludingCd():allSalesUnits()).filter(u=>u!==TOTAL_UNIT),list=[TOTAL_UNIT,...Array.from(new Set(base))],prev=s.value;s.innerHTML=list.map(u=>`<option value="${u}">${u}</option>`).join('');s.value=(prev&&list.includes(prev))?prev:TOTAL_UNIT}
+function fillAnalysisUnitSelect(id){fillUnitSelectWithTotal(id,false,false)}
 function totalStockMetrics(){
  let qty=0,value=0,weighted=0;
  stockUnitsIncludingCd().forEach(u=>Object.entries(stockLedger).forEach(([k,s])=>{
@@ -1413,13 +1458,12 @@ function totalStockMetrics(){
  }));
  return {qty,value,avg:qty?weighted/qty:0};
 }
-showTab('inventario');
-
 (async()=>{
  try{
    if(await validateSession()){
      document.getElementById('loginOverlay').style.display='none';
      applyRoleUI();
+     await loadHistoricalSales(false);setAnalysisDefaults();
      renderHomeDashboard();
      showTab('inventario');
      flushSyncQueue();
