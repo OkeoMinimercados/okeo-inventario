@@ -1,4 +1,4 @@
-const CACHE='okeo-gestao-v4-1-8';
+const CACHE='okeo-gestao-v4-1-9';
 const ASSETS=['./','./index.html','./manifest.webmanifest','./icon.png','./okeo-logo.png'];
 
 self.addEventListener('install',event=>{

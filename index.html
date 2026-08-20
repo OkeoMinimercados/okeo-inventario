@@ -24,13 +24,17 @@ main{max-width:1180px!important}
 .kpiCard{background:#fff;border:1px solid #edf0f2;border-radius:16px;padding:16px;display:flex;align-items:center;gap:12px;box-shadow:0 4px 16px #0000000a}
 .kpiIcon{width:50px;height:50px;border-radius:14px;background:#e8f5e9;display:flex;align-items:center;justify-content:center;font-size:24px}
 .kpiValue{font-size:22px;font-weight:800;margin-top:5px}
-.sectionTitle{font-size:16px;margin:18px 0 10px}
+.sectionTitle{font-size:16px;margin:18px 0 4px}.moduleHint{margin-bottom:10px}
 .moduleGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
 .moduleCard{background:#fff!important;color:#17202a!important;border:1px solid #edf0f2!important;border-radius:16px!important;padding:14px!important;display:flex!important;align-items:center;gap:12px;text-align:left;margin:0!important;box-shadow:0 4px 16px #0000000a}
 .moduleCard:hover{transform:translateY(-1px)}
 .moduleCard small{display:block;margin-top:4px}
 .moduleIcon{width:52px;height:52px;min-width:52px;border-radius:14px;display:flex;align-items:center;justify-content:center;color:white;font-size:24px;font-weight:800}
 .moduleIcon.blue{background:#2f80ed}.moduleIcon.green{background:#58c23b}.moduleIcon.purple{background:#8a43dc}.moduleIcon.orange{background:#ff6b1a}.moduleIcon.teal{background:#10a7a0}.moduleIcon.red{background:#ef3340}.moduleIcon.amber{background:#ffad0f}.moduleIcon.pink{background:#ef3b81}.moduleIcon.indigo{background:#1766d2}.moduleIcon.brown{background:#b06d22}.moduleIcon.cyan{background:#12a6a3}.moduleIcon.slate{background:#667788}
+.moduleIcon.navy{background:#21456f}.moduleIcon.emerald{background:#168a62}
+.moduleIcon.violet{background:#7153c6;font-size:14px}.moduleIcon.lime{background:#6cad2d}
+.moduleIcon.sky{background:#298fc2}.moduleIcon.gold{background:#c99718}
+.moduleIcon.graphite{background:#4c5966}
 .consolidatedCard{margin-top:18px;background:#fff;border:1px solid #dce6df;border-radius:16px;box-shadow:0 4px 16px #0000000a;overflow:hidden}
 .consolidatedTitle{padding:15px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #edf0f2}
 .consolidatedTitle b{display:block;font-size:18px}
@@ -74,7 +78,7 @@ main{max-width:1180px!important}
     <div class="kpiCard"><div class="kpiIcon">%</div><div><small>Margem (Mês)</small><div class="kpiValue" id="homeMargin">0,0%</div></div></div>
   </div>
 
-  <h3 class="sectionTitle">Módulos principais</h3>
+  <h3 class="sectionTitle">Módulos principais</h3><div class="muted moduleHint">Selecione um módulo abaixo para acessar.</div>
   <div class="moduleGrid" id="moduleGrid">
     <button class="moduleCard" data-module="novoproduto" data-min-role="ADMIN" onclick="showTab('novoproduto')"><span class="moduleIcon blue">🛒</span><span><b>Novo Produto</b><small>Cadastrar produtos</small></span></button>
     <button class="moduleCard" data-module="inventario" data-min-role="OPERATIONAL" onclick="showTab('inventario')"><span class="moduleIcon green">📦</span><span><b>Inventário</b><small>Contagem de estoque</small></span></button>
@@ -88,7 +92,15 @@ main{max-width:1180px!important}
     <button class="moduleCard" data-module="grupos" data-min-role="ADMIN" onclick="showTab('grupos')"><span class="moduleIcon brown">📦</span><span><b>Grupos de Demanda</b><small>Gerenciar grupos</small></span></button>
     <button class="moduleCard" data-module="dashboard" data-min-role="ADMIN" onclick="showTab('dashboard')"><span class="moduleIcon cyan">📋</span><span><b>Relatórios</b><small>Análises e curvas</small></span></button>
     <button class="moduleCard" data-module="integracao" data-min-role="ADMIN" onclick="showTab('integracao')"><span class="moduleIcon slate">⚙</span><span><b>Integração / API</b><small>Configurar integração</small></span></button>
-  </div>
+  
+    <button class="moduleCard" data-module="financeiro" data-min-role="ADMIN" onclick="showTab('financeiro')"><span class="moduleIcon navy">💰</span><span><b>Fluxo de Caixa</b><small>Entradas, saídas e extratos</small></span></button>
+    <button class="moduleCard" data-module="dre" data-min-role="ADMIN" onclick="showTab('dre')"><span class="moduleIcon emerald">📊</span><span><b>DRE</b><small>Resultado e margens</small></span></button>
+    <button class="moduleCard" data-module="produtos" data-min-role="ADMIN" onclick="showTab('produtos')"><span class="moduleIcon violet">ABC</span><span><b>Produtos / Curva ABC</b><small>Pareto, mix e baixo giro</small></span></button>
+    <button class="moduleCard" data-module="reposicao" data-min-role="ADMIN" onclick="showTab('reposicao')"><span class="moduleIcon lime">🔄</span><span><b>Reposição Inteligente</b><small>Estoque ideal e compras</small></span></button>
+    <button class="moduleCard" data-module="horarios" data-min-role="ADMIN" onclick="showTab('horarios')"><span class="moduleIcon sky">🕒</span><span><b>Dias / Horários</b><small>Picos de demanda</small></span></button>
+    <button class="moduleCard" data-module="fiscal" data-min-role="ADMIN" onclick="showTab('fiscal')"><span class="moduleIcon gold">🧾</span><span><b>Cadastro Fiscal SC</b><small>NCM, CEST e validação</small></span></button>
+    <button class="moduleCard" data-module="acessos" data-min-role="ADMIN" onclick="showTab('acessos')"><span class="moduleIcon graphite">👤</span><span><b>Controle de Acesso</b><small>Usuários e permissões</small></span></button>
+</div>
 
   <div class="consolidatedCard">
     <div class="consolidatedTitle"><span class="moduleIcon green">🏢</span><div><small>UNIDADE CONSOLIDADA</small><b>OKEO Consolidado</b><div class="pillLite">CD + Condomínios</div></div></div>
@@ -103,44 +115,6 @@ main{max-width:1180px!important}
   </div>
 </div>
 
-<div class="card">
-  <div class="actions">
-    <button class="green" data-module="inventario" data-min-role="OPERATIONAL" onclick="showTab('inventario')">Inventário</button>
-    <button data-module="movimentos" data-min-role="ADMIN" onclick="showTab('movimentos')">Movimentações</button>
-  </div>
-  <div class="actions" style="margin-top:8px">
-    <button class="amber" data-module="nf" data-min-role="OPERATIONAL" onclick="showTab('nf')">Entrada por NF</button>
-    <button class="gray" data-module="dashboard" data-min-role="ADMIN" onclick="showTab('dashboard')">Indicadores</button>
-  </div>
-  <div class="actions" style="margin-top:8px">
-    <button data-module="financeiro" data-min-role="ADMIN" onclick="showTab('financeiro')">Fluxo de Caixa</button>
-    <button data-module="dre" data-min-role="ADMIN" onclick="showTab('dre')">DRE</button>
-  </div>
-  <div class="actions" style="margin-top:8px">
-    <button class="gray" data-module="faturamento" data-min-role="ADMIN" onclick="showTab('faturamento')">Histórico de Faturamento</button>
-    <button class="gray" data-module="produtos" data-min-role="ADMIN" onclick="showTab('produtos')">Produtos / Curva ABC</button>
-  </div>
-  <div class="actions" style="margin-top:8px">
-    <button class="green" data-module="reposicao" data-min-role="ADMIN" onclick="showTab('reposicao')">Reposição Inteligente</button>
-    <button class="gray" data-module="fornecedores" data-min-role="ADMIN" onclick="showTab('fornecedores')">Fornecedores</button>
-  </div>
-  <div class="actions" style="margin-top:8px">
-    <button class="gray" data-module="grupos" data-min-role="ADMIN" onclick="showTab('grupos')">Grupos de Demanda</button>
-    <button class="gray" data-module="horarios" data-min-role="ADMIN" onclick="showTab('horarios')">Dias / Horários</button>
-  </div>
-  <div class="actions" style="margin-top:8px">
-    <button data-module="mensal" data-min-role="ADMIN" onclick="showTab('mensal')">Histórico Mensal</button>
-    <button data-module="cashback" data-min-role="ADMIN" onclick="showTab('cashback')">Cashback / Energia</button>
-  </div>
-  <div class="actions" style="margin-top:8px">
-    <button class="gray" data-module="fiscal" data-min-role="ADMIN" onclick="showTab('fiscal')">Cadastro Fiscal SC</button>
-    <button class="gray" data-module="novoproduto" data-min-role="ADMIN" onclick="showTab('novoproduto')">Novo Produto</button>
-  </div>
-  <div class="actions" style="margin-top:8px">
-    <button class="gray" data-module="integracao" data-min-role="ADMIN" onclick="showTab('integracao')">Integração / Fonte de Dados</button>
-<button class="gray" data-module="acessos" data-min-role="ADMIN" data-module="acessos" data-min-role="ADMIN" onclick="showTab('acessos')">Controle de Acesso</button>
-  </div>
-</div>
 <div id="tab-inventario" class="appTab"><div class="card"><label>1. Condomínio</label><select id="condo"><option value="">Selecione...</option></select><label>2. Ler código de barras</label><div class="actions"><button id="cameraBtn" class="green">📷 Usar câmera</button><button id="stopCamera" class="gray" disabled>Parar câmera</button></div><div id="readerWrap"><video id="video" playsinline muted></video><div class="muted">Aponte para o código de barras. Cada leitura válida soma +1.</div></div><label>Ou bipar/digitar EAN</label><div class="muted">Depois de localizar o produto, você pode digitar a quantidade total diretamente na lista.</div><input id="ean" inputmode="numeric" autocomplete="off" placeholder="Aguardando código..."><button id="add">Adicionar +1</button><div id="msg" class="status"></div></div><div class="card"><div class="row"><div><small>Itens diferentes</small><div class="big" id="sku">0</div></div><div><small>Unidades contadas</small><div class="big" id="units">0</div></div></div><label>Pesquisar produto contado</label><input id="search" placeholder="Nome ou EAN"></div><div class="card"><b>Controle de validade</b><div class="badges"><span class="badge danger">Vencidos: <b id="exp0">0</b></span><span class="badge danger">Até 7 dias: <b id="exp7">0</b></span><span class="badge soon">Até 15 dias: <b id="exp15">0</b></span><span class="badge soon">Até 30 dias: <b id="exp30">0</b></span><span class="badge good">Até 60 dias: <b id="exp60">0</b></span></div><div class="muted" style="margin-top:8px">A quantidade pode ser dividida em lotes com datas de validade diferentes.</div></div><div class="card"><b>Contagem atual</b><div id="list"></div></div><div class="card"><button class="green" id="csv">Finalizar e baixar CSV</button><button class="gray" id="backup">Salvar backup no aparelho</button><button class="red" id="clear">Zerar contagem</button></div><div class="card muted"><b>Instalação:</b> publique esta pasta em HTTPS, abra o endereço no celular e use “Adicionar à Tela de Início”. Após a primeira abertura, o app fica disponível offline.</div>
 </div>
 <div id="tab-movimentos" class="appTab" style="display:none">
