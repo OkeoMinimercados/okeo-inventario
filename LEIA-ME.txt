@@ -15,3 +15,7 @@ Botão Compartilhar CSV corrigido com fallback automático para download.
 
 VERSÃO 2.2
 Removida a opção Compartilhar CSV. Mantida apenas a opção Finalizar e baixar CSV.
+
+
+VERSÃO 2.3
+Agora a quantidade de cada produto pode ser digitada diretamente, mantendo também os botões + e - para ajustes rápidos.
