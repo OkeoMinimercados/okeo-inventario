@@ -19,3 +19,12 @@ Removida a opção Compartilhar CSV. Mantida apenas a opção Finalizar e baixar
 
 VERSÃO 2.3
 Agora a quantidade de cada produto pode ser digitada diretamente, mantendo também os botões + e - para ajustes rápidos.
+
+
+VERSÃO 2.4 — ESTOQUE + VALIDADE
+- Múltiplos lotes de validade por produto.
+- Quantidade por lote.
+- Tentativa de OCR pela câmera quando TextDetector estiver disponível.
+- Digitação manual da data como fallback.
+- Alertas de vencidos e até 7, 15, 30 e 60 dias.
+- CSV com validade, dias para vencer e status.
