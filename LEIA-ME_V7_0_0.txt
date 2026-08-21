@@ -1,0 +1,42 @@
+OKEO GESTÃO V7.0.0 — CLEAN ARCHITECTURE
+
+OBJETIVO
+Resolver definitivamente o travamento estrutural da V6.
+
+ARQUITETURA
+- index.html mínimo.
+- Nenhum histórico, estoque, relatório ou IndexedDB é carregado antes de um clique.
+- Cada módulo é um arquivo ES Module separado e só é importado ao ser selecionado.
+- Clique troca a interface ANTES do import/fetch.
+- Trocar de módulo cancela o Analytics Worker anterior.
+- API possui timeout e deduplicação.
+- IndexedDB é apenas cache de respostas, nunca requisito para abrir a interface.
+- Service Worker armazena somente o shell mínimo.
+- Relatórios usam endpoint específico/paginado.
+- Dados agregados continuam na Base Central.
+
+MÓDULOS
+Inventário, Entrada por NF, Vendas, Indicadores, Curva ABC, Reposição,
+DRE, Gestão Executiva, Estoque, Movimentações, Produtos, Fornecedores,
+Grupos de Demanda, Histórico Mensal, Dias/Horários, Política de Dados,
+Acessos e Saúde do Sistema.
+
+PERMISSÕES
+OPERATIONAL: Inventário e Entrada por NF.
+ADMIN: todos os módulos.
+
+BASE CENTRAL V4.0
+Novos endpoints leves:
+- v7_units
+- v7_catalog_search
+- v7_stock_page
+- v7_recent_movements
+O restante reutiliza analytics_monthly, analytics_abc, analytics_weekly,
+analytics_time, sales_report e demais APIs existentes.
+
+INSTALAÇÃO
+1. Atualizar Apps Script para GoogleAppsScript_OKEO_Base_Central_V4_0_V7.gs.
+2. Salvar e publicar nova versão da implantação existente.
+3. Não é necessário executar setup adicional.
+4. Publicar o conteúdo do ZIP V7.0.0 no GitHub.
+5. Testar em janela anônima.
