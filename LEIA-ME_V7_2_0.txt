@@ -1,0 +1,54 @@
+OKEO GESTÃO V7.2.0 — NATIVE FULL
+
+Esta versão elimina a camada V7->iframe->V6 que estava causando:
+- somente Inventário funcionando;
+- outras abas desabilitadas;
+- relatórios sem carregar;
+- conflito de sessão/permissão;
+- mensagens 'signal is aborted without reason'.
+
+A V7.2 é UMA ÚNICA APLICAÇÃO:
+- frontend completo da versão madura;
+- todas as funcionalidades existentes preservadas;
+- sem iframe;
+- sem segunda sessão;
+- sem segundo roteador;
+- sem ponte de permissões.
+
+Mantidas:
+- Inventário completo: foto/câmera/código de barras, +/-, digitação e validade.
+- Entrada por NF.
+- Movimentações e estoque.
+- Dashboard / Relatórios.
+- Fluxo de Caixa.
+- DRE.
+- Vendas / filtros.
+- Curva ABC.
+- Reposição Inteligente.
+- Fornecedores.
+- Grupos de Demanda.
+- Dias / Horários.
+- Histórico Mensal.
+- Cashback / Energia.
+- Cadastro Fiscal.
+- Integração/API.
+- Controle de Acesso.
+- Saúde do Sistema.
+- Inteligência de Estoque.
+- Gestão Executiva.
+- Política de Dados.
+
+DESEMPENHO
+- nenhum analytics pesado é pré-carregado após login;
+- troca de aba ocorre antes do cálculo;
+- Worker anterior é cancelado ao trocar de módulo;
+- consultas analíticas usam cache/deduplicação;
+- IndexedDB continua como armazenamento local;
+- Base Central V4.0 continua compatível.
+
+GITHUB
+Todos os arquivos necessários estão na raiz do ZIP.
+Não é necessário criar /js, /assets ou /modules.
+
+BASE CENTRAL
+Manter V4.0 atual. Não alterar Apps Script.
