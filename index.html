@@ -72,6 +72,11 @@ main{max-width:1180px!important}
 
 .historyBgStatus{margin-left:8px;padding:3px 7px;border-radius:999px;background:#edf4ff;color:#365f91;font-size:10px;font-weight:700}
 #loginBtn:disabled{opacity:.75;cursor:wait}
+
+.architectureBadge{display:inline-block;margin-top:6px;padding:3px 7px;border-radius:999px;background:#eaf4ff;color:#285a86;font-size:10px;font-weight:700}
+
+.storagePolicy{margin-bottom:14px}.storageGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}.storageGrid>div{padding:10px;border:1px solid #e1e7eb;border-radius:10px;background:#fafcfd}.storageGrid strong{display:block;font-size:12px}.storageGrid small{display:block;margin-top:4px;color:#65717d}
+@media(max-width:800px){.storageGrid{grid-template-columns:1fr 1fr}}@media(max-width:500px){.storageGrid{grid-template-columns:1fr}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
@@ -93,11 +98,20 @@ main{max-width:1180px!important}
   <div class="heroLogo"><img src="okeo-logo.png" alt="OKEO"></div>
   <div>
     <h2 style="margin:0">OKEO Gestão</h2>
-    <div class="muted">Gestão integrada de estoque, vendas, financeiro e reposição</div><span id="historyBackgroundStatus" class="historyBgStatus" style="display:none"></span>
+    <div class="muted">Gestão integrada de estoque, vendas, financeiro e reposição</div><div class="architectureBadge">V4.3 • relatórios sob demanda</div><span id="historyBackgroundStatus" class="historyBgStatus" style="display:none"></span>
   </div>
 </div>
 <div id="roleAccessBanner" class="roleAccessBanner" style="display:none">
   Perfil Operacional: acesso permitido somente a Inventário e Entrada por NF.
+</div>
+<div class="storagePolicy card">
+  <b>Arquitetura de Dados</b>
+  <div class="storageGrid">
+    <div><strong>Últimos 90 dias</strong><small>ABC, reposição, demanda e horários em maior detalhe.</small></div>
+    <div><strong>Histórico antigo</strong><small>Resumos mensais/trimestrais para manter anos de dados leves.</small></div>
+    <div><strong>DRE / Faturamento</strong><small>Histórico completo em agregados mensais.</small></div>
+    <div><strong>Estoque</strong><small>Saldo atual + movimentos recentes; histórico antigo consolidado.</small></div>
+  </div>
 </div>
 <div id="dashboardHome" class="dashboardHome">
   <div class="kpiGrid">
@@ -125,7 +139,7 @@ main{max-width:1180px!important}
     <button class="moduleCard" data-module="financeiro" data-min-role="ADMIN" onclick="showTab('financeiro')"><span class="moduleIcon navy">💰</span><span><b>Fluxo de Caixa</b><small>Entradas, saídas e extratos</small></span></button>
     <button class="moduleCard" data-module="dre" data-min-role="ADMIN" onclick="showTab('dre')"><span class="moduleIcon emerald">📊</span><span><b>DRE</b><small>Resultado e margens</small></span></button>
     <button class="moduleCard" data-module="produtos" data-min-role="ADMIN" onclick="showTab('produtos')"><span class="moduleIcon violet">ABC</span><span><b>Produtos / Curva ABC</b><small>Pareto, mix e baixo giro</small></span></button>
-    <button class="moduleCard" data-module="reposicao" data-min-role="ADMIN" onclick="showTab('reposicao')"><span class="moduleIcon lime">🔄</span><span><b>Reposição Inteligente</b><span class="perfBadge">base otimizada</span><small>Estoque ideal e compras</small></span></button>
+    <button class="moduleCard" data-module="reposicao" data-min-role="ADMIN" onclick="showTab('reposicao')"><span class="moduleIcon lime">🔄</span><span><b>Reposição Inteligente</b><div class="muted">Reposição usa os últimos 90 dias para refletir demanda recente e evitar que vendas antigas distorçam o estoque ideal.</div><span class="perfBadge">base otimizada</span><small>Estoque ideal e compras</small></span></button>
     <button class="moduleCard" data-module="horarios" data-min-role="ADMIN" onclick="showTab('horarios')"><span class="moduleIcon sky">🕒</span><span><b>Dias / Horários</b><small>Picos de demanda</small></span></button>
     <button class="moduleCard" data-module="fiscal" data-min-role="ADMIN" onclick="showTab('fiscal')"><span class="moduleIcon gold">🧾</span><span><b>Cadastro Fiscal SC</b><small>NCM, CEST e validação</small></span></button>
     <button class="moduleCard" data-module="acessos" data-min-role="ADMIN" onclick="showTab('acessos')"><span class="moduleIcon graphite">👤</span><span><b>Controle de Acesso</b><small>Usuários e permissões</small></span></button>
@@ -235,7 +249,7 @@ main{max-width:1180px!important}
 
 <div id="tab-dre" class="appTab" style="display:none">
   <div class="card">
-    <b>DRE Gerencial</b>
+    <b>DRE Gerencial</b><div class="muted">DRE mantém histórico completo por mês; isso permite vários anos sem carregar vendas individuais.</div>
     <div class="muted">Vendas e CMV são calculados automaticamente pelas vendas do período. Todos os valores podem ser ajustados e salvos por período e unidade.</div>
     <div class="row"><div><label>De</label><input id="dreFrom" type="date"></div><div><label>Até</label><input id="dreTo" type="date"></div></div>
     <label>Unidade</label><select id="dreUnit"></select>
@@ -264,7 +278,7 @@ main{max-width:1180px!important}
 
 <div id="tab-produtos" class="appTab" style="display:none">
   <div class="card">
-    <b>Análise de Produtos / Curva ABC</b><div class="muted">Base de gestão: abril a julho/2026. OKEO Consolidado considera todos os condomínios e exclui o CD das vendas.</div><div id="historyStatus" class="historyStatus">Carregando histórico...</div>
+    <b>Análise de Produtos / Curva ABC</b><div class="muted">Performance: detalhe operacional usa janela móvel de 90 dias. Períodos antigos são preservados em resumos trimestrais.</div><div class="muted">Base de gestão: abril a julho/2026. OKEO Consolidado considera todos os condomínios e exclui o CD das vendas.</div><div id="historyStatus" class="historyStatus">Carregando histórico...</div>
     <div class="row"><div><label>De</label><input id="prodFrom" type="date"></div><div><label>Até</label><input id="prodTo" type="date"></div></div>
     <label>Unidade</label><select id="prodUnit"></select>
     <label>Ordenar por</label><select id="prodSort"><option value="revenue">Venda R$</option><option value="cmv">CMV R$</option><option value="margin">Margem R$</option><option value="qty">Quantidade</option></select>
@@ -659,23 +673,40 @@ function fastRender(name,parts,fn){
 }
 function valueFast(id){return document.getElementById(id)?.value||''}
 async function renderProductAnalysisFast(){
- if(!historicalAbcReady)await loadHistoricalAbcAggregate();
- fastRender('prod',[valueFast('prodFrom'),valueFast('prodTo'),valueFast('prodUnit'),valueFast('prodSort')],renderProductAnalysis)
+ await loadHistoricalAbcAggregate();
+ ensureLocalSalesLoaded();
+ delete renderCache.prod;
+ return renderProductAnalysis();
 }
-function renderDreFast(){fastRender('dre',[valueFast('dreFrom'),valueFast('dreTo'),valueFast('dreUnit')],renderDre)}
+async function renderDreFast(){
+ await loadUnitDayHistory();
+ ensureLocalSalesLoaded();
+ delete renderCache.dre;
+ return renderDre();
+}
 async function renderReplenishmentFast(){
- if(!optimizedHistoryReady)await loadOptimizedHistory();
- fastRender('repl',[valueFast('replWeeks'),valueFast('replMinFactor'),valueFast('replMaxFactor'),valueFast('replUnit'),valueFast('replSupplier'),valueFast('replStatus'),valueFast('replSearch'),JSON.stringify(productGroup),JSON.stringify(demandGroups)],renderReplenishment)
+ await loadWeeklyHistory();
+ ensureLocalSalesLoaded();
+ delete renderCache.repl;
+ return renderReplenishment();
 }
 async function renderTimeAnalysisFast(){
- if(!optimizedHistoryReady)await loadOptimizedHistory();
- fastRender('time',[valueFast('timeWeeks'),valueFast('timeUnit'),String(selectedTimeEan||'')],renderTimeAnalysis)
+ await loadTimeHistory();
+ delete renderCache.time;
+ return renderTimeAnalysis();
 }
 async function renderMonthlyHistoryFast(){
- if(!optimizedHistoryReady)await loadOptimizedHistory();
- fastRender('monthly',[valueFast('monthlyUnit')],renderMonthlyHistory)
+ await loadUnitDayHistory();
+ ensureLocalSalesLoaded();
+ delete renderCache.monthly;
+ return renderMonthlyHistory();
 }
-function renderSalesHistoryFast(){fastRender('salesHistory',[valueFast('histUnit')],renderSalesHistory)}
+async function renderSalesHistoryFast(){
+ await loadUnitDayHistory();
+ ensureLocalSalesLoaded();
+ delete renderCache.salesHistory;
+ return renderSalesHistory();
+}
 function showTab(name){
  applyRoleUI();
  if(!authState.user||document.getElementById('loginOverlay')?.style.display!=='none')return;
@@ -689,14 +720,14 @@ function showTab(name){
      if(name==='movimentos')renderStock();
      if(name==='dashboard')renderDashboard();
      if(name==='financeiro')renderCash();
-     if(name==='dre')renderDreFast();
-     if(name==='faturamento')renderSalesHistoryFast();
-     if(name==='produtos')renderProductAnalysisFast();
-     if(name==='reposicao')renderReplenishmentFast();
+     if(name==='dre')Promise.resolve(renderDreFast()).finally(()=>setModuleLoading(false));
+     if(name==='faturamento')Promise.resolve(renderSalesHistoryFast()).finally(()=>setModuleLoading(false));
+     if(name==='produtos')Promise.resolve(renderProductAnalysisFast()).finally(()=>setModuleLoading(false));
+     if(name==='reposicao')Promise.resolve(renderReplenishmentFast()).finally(()=>setModuleLoading(false));
      if(name==='fornecedores')renderSupplierList();
      if(name==='grupos')renderDemandGroups();
-     if(name==='horarios')renderTimeAnalysisFast();
-     if(name==='mensal')renderMonthlyHistoryFast();
+     if(name==='horarios')Promise.resolve(renderTimeAnalysisFast()).finally(()=>setModuleLoading(false));
+     if(name==='mensal')Promise.resolve(renderMonthlyHistoryFast()).finally(()=>setModuleLoading(false));
      if(name==='cashback')renderPaymentModule();
      if(name==='fiscal')renderFiscal();
      if(name==='integracao')renderIntegration();
@@ -757,7 +788,20 @@ document.getElementById('nfPost').onclick=()=>{const u=document.getElementById('
 
 // ---------------- FINANCEIRO / DRE / FATURAMENTO / PRODUTOS ----------------
 let cashEntries=JSON.parse(localStorage.getItem('okeo_cash_v32')||'[]');
-let salesRows=JSON.parse(localStorage.getItem('okeo_sales_v32')||'[]');
+let salesRows=[];
+let localSalesLoaded=false;
+function ensureLocalSalesLoaded(){
+ if(localSalesLoaded)return salesRows;
+ try{
+   const parsed=JSON.parse(localStorage.getItem('okeo_sales_v32')||'[]');
+   // Historical seed from older versions must not remain in browser storage.
+   salesRows=Array.isArray(parsed)?parsed.filter(x=>String(x.source||'')!=='HISTORICO_ABR_JUL_2026'):[];
+   localStorage.setItem('okeo_sales_v32',JSON.stringify(salesRows));
+ }catch(e){salesRows=[]}
+ localSalesLoaded=true;
+ invalidateAnalysisCache?.();
+ return salesRows;
+}
 let historicalSalesRows=[];
 
 let historicalProductDayRows=[];
@@ -765,48 +809,41 @@ let historicalUnitDayRows=[];
 let historicalWeeklyRows=[];
 let historicalTimeRows=[];
 let optimizedHistoryReady=false;
+const reportLoads={};
 
+
+let quarterlyProductRows=[];
+async function loadQuarterlyProductHistory(){
+ if(quarterlyProductRows.length)return quarterlyProductRows;
+ quarterlyProductRows=await loadReportJson('quarterlyProducts','./analytics-history-quarterly-products.json');
+ return quarterlyProductRows;
+}
+async function loadReportJson(key,url){
+ if(reportLoads[key])return reportLoads[key];
+ reportLoads[key]=fetch(url+'?v=430',{cache:'force-cache'}).then(r=>{if(!r.ok)throw new Error(url);return r.json()});
+ return reportLoads[key];
+}
+async function loadWeeklyHistory(){
+ if(historicalWeeklyRows.length)return historicalWeeklyRows;
+ historicalWeeklyRows=await loadReportJson('weekly','./analytics-hot90-replenishment.json');return historicalWeeklyRows;
+}
+async function loadTimeHistory(){
+ if(historicalTimeRows.length)return historicalTimeRows;
+ historicalTimeRows=await loadReportJson('time','./analytics-hot90-time.json');return historicalTimeRows;
+}
+async function loadUnitDayHistory(){
+ if(historicalUnitDayRows.length)return historicalUnitDayRows;
+ historicalUnitDayRows=await loadReportJson('unitday','./analytics-history-monthly.json');return historicalUnitDayRows;
+}
+async function loadProductDayHistory(){
+ if(historicalProductDayRows.length)return historicalProductDayRows;
+ historicalProductDayRows=await loadReportJson('productday','./analytics-hot90-abc.json');return historicalProductDayRows;
+}
 async function loadOptimizedHistory(){
- if(optimizedHistoryReady)return;
- const urls=[
-   './historico-produto-dia-abr-jul-2026.json',
-   './historico-unidade-dia-abr-jul-2026.json',
-   './historico-semanal-abr-jul-2026.json',
-   './historico-horarios-abr-jul-2026.json'
- ];
- try{
-   const [a,b,c,d]=await Promise.all(urls.map(u=>fetch(u+'?v=428',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error(u);return r.json()})));
-   historicalProductDayRows=a;historicalUnitDayRows=b;historicalWeeklyRows=c;historicalTimeRows=d;
-   optimizedHistoryReady=true;
- }catch(e){
-   console.warn('Optimized history unavailable',e);
- }
+ await Promise.all([loadWeeklyHistory(),loadTimeHistory(),loadUnitDayHistory()]);
+ optimizedHistoryReady=true;
 }
-
-let historyBackgroundLoading=false;
-async function loadHistoryInBackground(){
- if(historyBackgroundLoading)return;
- historyBackgroundLoading=true;
- const badge=document.getElementById('historyBackgroundStatus');
- if(badge){badge.style.display='inline-block';badge.textContent='Carregando histórico...'}
- try{
-   await Promise.all([
-     loadHistoricalSales(false),
-     loadHistoricalAbcAggregate(),
-     loadOptimizedHistory()
-   ]);
-   invalidateAnalysisCache();
-   if(badge){badge.textContent='Histórico pronto';setTimeout(()=>badge.style.display='none',1800)}
-   // Atualiza indicadores leves após os dados ficarem prontos sem bloquear login.
-   setTimeout(()=>{try{renderHomeDashboard()}catch(e){}},0);
- }catch(e){
-   console.warn('Background history load',e);
-   if(badge){badge.textContent='Histórico será carregado ao abrir relatório'}
- }finally{
-   historyBackgroundLoading=false;
- }
-}
-
+async function loadHistoryInBackground(){return true}
 let historicalAbcRows=[];
 let historicalAbcReady=false;
 async function loadHistoricalAbcAggregate(){
@@ -1832,53 +1869,33 @@ async function saveUserWithHash(data){
  return await getBackend('user_save_hashed',{username:data.username,name:data.name,role:data.role,active:data.active!==false?'1':'0',salt,passwordHash});
 }
 document.getElementById('loginBtn').onclick=async()=>{
- const o=document.getElementById('loginMsg');
- const username=document.getElementById('loginUser').value.trim();
- const password=document.getElementById('loginPass').value;
- if(!username||!password){
-   o.className='status warn';
-   o.textContent='Informe usuário e senha.';
-   return;
- }
- o.className='status';
- o.textContent='Entrando...';
+ const o=document.getElementById('loginMsg'),btn=document.getElementById('loginBtn');
+ const username=document.getElementById('loginUser').value.trim(),password=document.getElementById('loginPass').value;
+ if(!username||!password){o.className='status warn';o.textContent='Informe usuário e senha.';return}
+ btn.disabled=true;o.className='status';o.textContent='Entrando...';
  try{
    const r=await loginWithChallenge(username,password);
    if(!r||!r.ok)throw new Error((r&&r.error)||'Login inválido');
-   authState={token:r.token,user:r.user};
-   localStorage.setItem('okeo_auth_token_v39',r.token);
-   document.getElementById('loginOverlay').style.display='none';
-   o.textContent='';
-   applyRoleUI();
-   renderHomeDashboard();
-   showTab('inventario');
-   flushSyncQueue();
+   authState={token:r.token,user:r.user};localStorage.setItem('okeo_auth_token_v39',r.token);
+   document.getElementById('loginOverlay').style.display='none';o.textContent='';btn.disabled=false;
+   applyRoleUI();setAnalysisDefaults();showTab('inventario');flushSyncQueue();
+   // Somente após a interface já estar aberta, prepara resumo leve e vendas locais.
+   setTimeout(()=>{ensureLocalSalesLoaded();loadUnitDayHistory().then(()=>renderHomeDashboard()).catch(()=>{})},250);
  }catch(e){
-   console.error('Erro login OKEO:',e);
-   o.className='status warn';
-   o.textContent='Não foi possível entrar. '+(e&&e.message?e.message:'Confira usuário, senha e conexão com a Base Central.');
+   btn.disabled=false;o.className='status warn';o.textContent='Não foi possível entrar. '+(e?.message||'Confira usuário e senha.');
  }
 };
 
 function renderHomeDashboard(){
  try{
-   const today=new Date(),month=today.toISOString().slice(0,7);
-   const sm=salesMetrics(TOTAL_UNIT,month+'-01',today.toISOString().slice(0,10));
-   const gross=sm.revenue-sm.cmv,margin=sm.revenue?gross/sm.revenue*100:0;
-   const st=totalStockMetrics();
-   const set=(id,val)=>{const e=document.getElementById(id);if(e)e.textContent=val};
-   set('homeRevenue',brl(sm.revenue));
-   set('homeTicket',brl(sm.avg));
-   set('homeUnitsSold',sm.unitsSold.toLocaleString('pt-BR'));
-   set('homeMargin',margin.toFixed(1).replace('.',',')+'%');
-   set('homeStock',st.qty.toLocaleString('pt-BR'));
-   set('homeConsolRevenue',brl(sm.revenue));
-   set('homeConsolSold',sm.unitsSold.toLocaleString('pt-BR'));
-   set('homeConsolTicket',brl(sm.avg));
-   set('homeConsolMargin',margin.toFixed(1).replace('.',',')+'%');
- }catch(e){
-   console.warn('Dashboard inicial:',e);
- }
+   if(!historicalUnitDayRows.length)return;
+   const latest=historicalUnitDayRows.map(x=>x.date).sort().pop()?.slice(0,7)||'';
+   const rows=historicalUnitDayRows.filter(x=>x.date.startsWith(latest));
+   const revenue=rows.reduce((a,x)=>a+Number(x.value||0),0),sold=rows.reduce((a,x)=>a+Number(x.qty||0),0),tickets=rows.reduce((a,x)=>a+Number(x.tickets||0),0),avg=tickets?revenue/tickets:0;
+   const st=totalStockMetrics(),set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
+   set('homeRevenue',brl(revenue));set('homeTicket',brl(avg));set('homeUnitsSold',sold.toLocaleString('pt-BR'));set('homeMargin','—');
+   set('homeStock',st.qty.toLocaleString('pt-BR'));set('homeConsolRevenue',brl(revenue));set('homeConsolSold',sold.toLocaleString('pt-BR'));set('homeConsolTicket',brl(avg));set('homeConsolMargin','—');
+ }catch(e){}
 }
 
 async function renderUsers(){
@@ -1908,15 +1925,9 @@ function totalStockMetrics(){
  try{
    if(await validateSession()){
      document.getElementById('loginOverlay').style.display='none';
-     applyRoleUI();setAnalysisDefaults();renderHomeDashboard();loadHistoryInBackground();
-     showTab('inventario');
-     flushSyncQueue();
-   }else{
-     document.getElementById('loginOverlay').style.display='flex';
-   }
- }catch(e){
-   console.error('Inicialização OKEO:',e);
-   document.getElementById('loginOverlay').style.display='flex';
- }
+     applyRoleUI();setAnalysisDefaults();showTab('inventario');flushSyncQueue();
+     setTimeout(()=>{ensureLocalSalesLoaded();loadUnitDayHistory().then(()=>renderHomeDashboard()).catch(()=>{})},250);
+   }else document.getElementById('loginOverlay').style.display='flex';
+ }catch(e){document.getElementById('loginOverlay').style.display='flex'}
 })();
 if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));</script></body></html>
