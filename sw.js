@@ -1,49 +1,5 @@
-const CACHE='okeo-gestao-v4-3-4';
-const ASSETS=['./','./index.html','./manifest.webmanifest','./icon.png','./okeo-logo.png'];
-
-self.addEventListener('install',event=>{
-  event.waitUntil(
-    caches.open(CACHE)
-      .then(cache=>cache.addAll(ASSETS))
-      .then(()=>self.skipWaiting())
-  );
-});
-
-self.addEventListener('activate',event=>{
-  event.waitUntil(
-    caches.keys()
-      .then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k))))
-      .then(()=>self.clients.claim())
-  );
-});
-
-self.addEventListener('fetch',event=>{
-  const req=event.request;
-  if(req.method!=='GET') return;
-
-  const url=new URL(req.url);
-
-  // APIs, Google Apps Script and any cross-origin request always go directly to network.
-  if(url.origin!==self.location.origin){
-    return;
-  }
-
-  event.respondWith(
-    caches.match(req).then(cached=>{
-      const network=fetch(req).then(resp=>{
-        if(resp && resp.ok){
-          const copy=resp.clone();
-          caches.open(CACHE).then(cache=>cache.put(req,copy));
-        }
-        return resp;
-      });
-
-      // HTML navigation prefers network so deployments become visible immediately.
-      if(req.mode==='navigate'){
-        return network.catch(()=>cached||caches.match('./index.html'));
-      }
-
-      return cached||network;
-    })
-  );
-});
+const CACHE='okeo-gestao-v6-1-0';
+const SHELL=['./','./index.html','./manifest.webmanifest','./icon.png','./okeo-logo.png','./offline.html','./js/app-core.js','./analytics-worker.js'];
+self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting())));
+self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith('okeo-gestao-')&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
+self.addEventListener('fetch',e=>{const r=e.request;if(r.method!=='GET')return;const u=new URL(r.url);if(u.origin!==self.location.origin)return;if(r.mode==='navigate'){e.respondWith(fetch(r,{cache:'no-store'}).then(x=>{if(x&&x.ok)caches.open(CACHE).then(c=>c.put('./index.html',x.clone()));return x}).catch(()=>caches.match('./offline.html')));return}if(u.pathname.includes('/js/modules/')||u.pathname.endsWith('.json')){e.respondWith(caches.match(r).then(cached=>{const net=fetch(r).then(x=>{if(x&&x.ok)caches.open(CACHE).then(c=>c.put(r,x.clone()));return x}).catch(()=>cached);return cached||net}));return}e.respondWith(caches.match(r).then(cached=>cached||fetch(r).then(x=>{if(x&&x.ok)caches.open(CACHE).then(c=>c.put(r,x.clone()));return x})))});
