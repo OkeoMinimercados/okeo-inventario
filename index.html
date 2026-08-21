@@ -61,6 +61,14 @@ main{max-width:1180px!important}
 .replStatus{display:inline-block;padding:4px 7px;border-radius:999px;font-size:10px;font-weight:800;white-space:nowrap}.replStatus.REPOR{background:#d94b45;color:#fff}.replStatus.ATENCAO{background:#e5a91c;color:#fff}.replStatus.OK{background:#2c965b;color:#fff}.replStatus.SEM_GIRO{background:#7a8791;color:#fff}
 .replGroupMetrics{display:flex;gap:18px;flex-wrap:wrap;padding:8px 12px;background:#eef5ff;border-bottom:1px solid #dce7f5;font-size:11px;position:sticky;left:0}
 @media(max-width:700px){.replFullRow{min-width:980px}.replGroupMetrics{gap:9px}}
+
+.abcSummary{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:12px}
+.abcSummaryCard{border:1px solid #dde4e8;border-radius:14px;padding:16px;background:#fff}
+.abcSummaryCard.abcA{border-top:5px solid #299a58}.abcSummaryCard.abcB{border-top:5px solid #dca51b}.abcSummaryCard.abcC{border-top:5px solid #d85c57}
+.abcSummaryClass{font-weight:900;font-size:15px}.abcSummaryNumber{font-size:30px;font-weight:900;margin-top:10px}.abcSummaryRevenue{font-size:22px;font-weight:900;margin-top:12px}.abcSummaryLabel{font-size:12px;color:#61707d;margin-top:2px}
+@media(max-width:700px){.abcSummary{grid-template-columns:1fr}}
+
+.perfBadge{display:inline-block;margin-left:8px;padding:3px 7px;border-radius:999px;background:#e7f5ec;color:#26744a;font-size:10px;font-weight:800;vertical-align:middle}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
@@ -114,7 +122,7 @@ main{max-width:1180px!important}
     <button class="moduleCard" data-module="financeiro" data-min-role="ADMIN" onclick="showTab('financeiro')"><span class="moduleIcon navy">💰</span><span><b>Fluxo de Caixa</b><small>Entradas, saídas e extratos</small></span></button>
     <button class="moduleCard" data-module="dre" data-min-role="ADMIN" onclick="showTab('dre')"><span class="moduleIcon emerald">📊</span><span><b>DRE</b><small>Resultado e margens</small></span></button>
     <button class="moduleCard" data-module="produtos" data-min-role="ADMIN" onclick="showTab('produtos')"><span class="moduleIcon violet">ABC</span><span><b>Produtos / Curva ABC</b><small>Pareto, mix e baixo giro</small></span></button>
-    <button class="moduleCard" data-module="reposicao" data-min-role="ADMIN" onclick="showTab('reposicao')"><span class="moduleIcon lime">🔄</span><span><b>Reposição Inteligente</b><small>Estoque ideal e compras</small></span></button>
+    <button class="moduleCard" data-module="reposicao" data-min-role="ADMIN" onclick="showTab('reposicao')"><span class="moduleIcon lime">🔄</span><span><b>Reposição Inteligente</b><span class="perfBadge">base otimizada</span><small>Estoque ideal e compras</small></span></button>
     <button class="moduleCard" data-module="horarios" data-min-role="ADMIN" onclick="showTab('horarios')"><span class="moduleIcon sky">🕒</span><span><b>Dias / Horários</b><small>Picos de demanda</small></span></button>
     <button class="moduleCard" data-module="fiscal" data-min-role="ADMIN" onclick="showTab('fiscal')"><span class="moduleIcon gold">🧾</span><span><b>Cadastro Fiscal SC</b><small>NCM, CEST e validação</small></span></button>
     <button class="moduleCard" data-module="acessos" data-min-role="ADMIN" onclick="showTab('acessos')"><span class="moduleIcon graphite">👤</span><span><b>Controle de Acesso</b><small>Usuários e permissões</small></span></button>
@@ -264,9 +272,14 @@ main{max-width:1180px!important}
     <div class="row" style="margin-top:10px"><div><small>Margem bruta</small><div class="big" id="prodMargin">R$ 0,00</div></div><div><small>SKUs vendidos</small><div class="big" id="prodSkus">0</div></div></div>
   </div>
   <div class="card">
+    <b>Resumo da Curva ABC</b>
+    <div class="muted">Quantidade de produtos e faturamento de cada classe, com participação sobre o total.</div>
+    <div id="abcSummary" class="abcSummary"></div>
+  </div>
+  <div class="card">
     <b>Mix e Curva ABC</b>
     <div class="muted">A: até 80% do faturamento acumulado • B: de 80% a 95% • C: acima de 95%.</div>
-    <div id="productTable"></div>
+    <div id="productTable"></div><div class="actions"><button class="gray" id="abcShowMore">Mostrar mais produtos</button><button class="gray" id="abcShowAll">Mostrar todos</button></div><div id="abcRowsInfo" class="muted"></div>
   </div>
 </div>
 
@@ -731,6 +744,44 @@ document.getElementById('nfPost').onclick=()=>{const u=document.getElementById('
 let cashEntries=JSON.parse(localStorage.getItem('okeo_cash_v32')||'[]');
 let salesRows=JSON.parse(localStorage.getItem('okeo_sales_v32')||'[]');
 let historicalSalesRows=[];
+
+let historicalProductDayRows=[];
+let historicalUnitDayRows=[];
+let historicalWeeklyRows=[];
+let historicalTimeRows=[];
+let optimizedHistoryReady=false;
+
+async function loadOptimizedHistory(){
+ if(optimizedHistoryReady)return;
+ const urls=[
+   './historico-produto-dia-abr-jul-2026.json',
+   './historico-unidade-dia-abr-jul-2026.json',
+   './historico-semanal-abr-jul-2026.json',
+   './historico-horarios-abr-jul-2026.json'
+ ];
+ try{
+   const [a,b,c,d]=await Promise.all(urls.map(u=>fetch(u+'?v=428',{cache:'no-store'}).then(r=>{if(!r.ok)throw new Error(u);return r.json()})));
+   historicalProductDayRows=a;historicalUnitDayRows=b;historicalWeeklyRows=c;historicalTimeRows=d;
+   optimizedHistoryReady=true;
+ }catch(e){
+   console.warn('Optimized history unavailable',e);
+ }
+}
+let historicalAbcRows=[];
+let historicalAbcReady=false;
+async function loadHistoricalAbcAggregate(){
+ if(historicalAbcReady&&historicalAbcRows.length)return;
+ try{
+   const r=await fetch('./historico-abc-abr-jul-2026.json?v=1',{cache:'no-store'});
+   if(!r.ok)throw new Error('aggregate');
+   historicalAbcRows=await r.json();
+   historicalAbcReady=true;
+ }catch(e){
+   console.warn('ABC aggregate unavailable',e);
+   historicalAbcRows=[];
+ }
+}
+
 let historyReady=false;
 const HISTORY_START='2026-04-01',HISTORY_END='2026-07-31';
 function setHistoryStatus(msg,ok=true){const e=document.getElementById('historyStatus');if(e){e.textContent=msg;e.className='historyStatus '+(ok?'ok':'warn')}}
@@ -845,18 +896,39 @@ document.getElementById('importSales').onclick=async()=>{
  }
 };
 function salesMetrics(unit='',from='',to=''){
- const ck=fastCacheKey(['sales',unit,from,to]);
+ const ck=fastCacheKey(['sales428',unit,from,to]);
  if(metricCache.has(ck))return metricCache.get(ck);
- const result=(()=>{
- const rows=analysisSalesRows().filter(x=>{
-   const d=String(x.datetime).slice(0,10),isCd=String(x.unit).toLowerCase().includes('cd - estoque central');
-   const unitOk=!unit||unit===TOTAL_UNIT?!isCd:x.unit===unit;
-   return unitOk&&(!from||d>=from)&&(!to||d<=to);
- });
- const revenue=rows.reduce((a,x)=>a+(Number(x.value)||0),0),unitsSold=rows.reduce((a,x)=>a+(Number(x.qty)||0),0),tickets=new Set(rows.map(x=>x.unit+'|'+normalizeDateTime(x.datetime))).size;
- let cmv=0;rows.forEach(x=>{const p=saleMasterProduct(x),e=p?p.ean:(x.ean||x.code);if(e)cmv+=(Number(x.qty)||0)*(Number(gs(x.unit,e).avgCost)||0)});
- return{rows,revenue,unitsSold,tickets,avg:tickets?revenue/tickets:0,cmv};
-})();
+
+ let revenue=0,unitsSold=0,tickets=0,rows=[];
+ const canUseAgg=optimizedHistoryReady&&historicalUnitDayRows.length&&(!from||from>='2026-04-01')&&(!to||to<='2026-07-31');
+
+ if(canUseAgg){
+   historicalUnitDayRows.forEach(x=>{
+     if(from&&x.date<from)return;if(to&&x.date>to)return;
+     if(unit&&unit!==TOTAL_UNIT&&x.unit!==unit)return;
+     revenue+=Number(x.value)||0;unitsSold+=Number(x.qty)||0;tickets+=Number(x.tickets)||0;
+   });
+   // detailed rows only when caller needs them later; use product-day aggregate as lightweight substitute
+   rows=historicalProductDayRows.filter(x=>(!from||x.date>=from)&&(!to||x.date<=to)&&(!unit||unit===TOTAL_UNIT||x.unit===unit)).map(x=>({
+     datetime:x.date+' 12:00:00',unit:x.unit,code:x.code,product:x.product,qty:x.qty,value:x.value,source:'HIST_AGG'
+   }));
+ }else{
+   rows=analysisSalesRows().filter(x=>{
+     const d=saleDateKey(x.datetime),isCd=String(x.unit||'').toLowerCase().includes('cd - estoque central');
+     const unitOk=!unit||unit===TOTAL_UNIT?!isCd:x.unit===unit;
+     return unitOk&&(!from||d>=from)&&(!to||d<=to);
+   });
+   revenue=rows.reduce((a,x)=>a+(Number(x.value)||0),0);
+   unitsSold=rows.reduce((a,x)=>a+(Number(x.qty)||0),0);
+   tickets=new Set(rows.map(x=>x.unit+'|'+normalizeDateTime(x.datetime))).size;
+ }
+
+ let cmv=0;
+ // CMV is unavailable historically until purchase costs are present; keep current logic for new/local sales.
+ if(!canUseAgg){
+   rows.forEach(x=>{const p=saleMasterProduct(x),e=p?p.ean:(x.ean||x.code);if(e)cmv+=(Number(x.qty)||0)*(Number(gs(x.unit,e).avgCost)||0)});
+ }
+ const result={rows,revenue,unitsSold,tickets,avg:tickets?revenue/tickets:0,cmv};
  metricCache.set(ck,result);return result;
 }
 function renderSalesHistory(){const m=salesMetrics();document.getElementById('histRevenue').textContent=brl(m.revenue);document.getElementById('histTickets').textContent=m.tickets.toLocaleString('pt-BR');document.getElementById('histAvgTicket').textContent=brl(m.avg);document.getElementById('histUnits').textContent=m.unitsSold.toLocaleString('pt-BR');const by={};m.rows.forEach(x=>{const k=String(x.datetime).slice(0,7)||'Sem mês';if(!by[k])by[k]={r:0,t:new Set()};by[k].r+=Number(x.value)||0;by[k].t.add(x.unit+'|'+normalizeDateTime(x.datetime))});document.getElementById('salesByMonth').innerHTML=Object.entries(by).sort((a,b)=>b[0].localeCompare(a[0])).map(([k,v])=>`<div class="monthrow"><b>${k}</b><span>${brl(v.r)}</span><span>${v.t.size} tickets</span></div>`).join('')||'<small>Sem vendas importadas.</small>'}
@@ -870,23 +942,128 @@ function renderDre(useAuto=false){fillAnalysisUnitSelect('dreUnit');const saved=
 function calcDre(){const v={};DRE_LINES.forEach(([k])=>v[k]=parseMoney(document.getElementById('dre_'+k)?.value));const sales=v.sales||0;let net=sales;DRE_LINES.slice(1).forEach(([k])=>net-=Math.abs(v[k]||0));DRE_LINES.forEach(([k])=>{const e=document.getElementById('drePct_'+k);if(e)e.textContent=(sales?Math.abs(v[k]||0)/sales*100:0).toFixed(1).replace('.',',')+'%'});document.getElementById('dreNet').textContent=brl(net);document.getElementById('dreNetPct').textContent=(sales?net/sales*100:0).toFixed(1).replace('.',',')+'%';return{...v,net}}
 document.getElementById('refreshDre').onclick=async()=>{await loadHistoricalSales(false);renderDre(false)};document.getElementById('dreLoadAuto').onclick=async()=>{await loadHistoricalSales(false);renderDre(true)};document.getElementById('dreSave').onclick=()=>{dreCustom[dreKey()]={...calcDre(),savedAt:new Date().toISOString()};localStorage.setItem('okeo_dre_custom_v423',JSON.stringify(dreCustom));const o=document.getElementById('dreMsg');o.className='status ok';o.textContent='DRE salva.'};['dreFrom','dreTo','dreUnit'].forEach(id=>document.getElementById(id)?.addEventListener('change',()=>renderDre(false)));
 
+let abcVisibleRows=100;
+let lastAbcAnalysis=null;
+
+function abcHistoricalRows(unit,from,to){
+ if(!historicalAbcReady||!historicalAbcRows.length)return null;
+ return historicalAbcRows.filter(x=>{
+   const unitOk=!unit||unit===TOTAL_UNIT?true:x.unit===unit;
+   return unitOk&&(!from||x.date>=from)&&(!to||x.date<=to);
+ });
+}
 function productMetrics(unit='',from='',to=''){
- const rows=salesMetrics(unit,from,to).rows,totalRevenue=rows.reduce((a,x)=>a+(Number(x.value)||0),0),map={};
- rows.forEach(x=>{const key=(x.code||x.product||'SEM');if(!map[key])map[key]={code:x.code,product:x.product||('EAN '+x.code),qty:0,revenue:0,cmv:0};const m=map[key];m.qty+=Number(x.qty)||0;m.revenue+=Number(x.value)||0;const p=masterProduct(x.code),e=p?p.ean:x.code,c=Number(gs(x.unit,e).avgCost)||0;m.cmv+=(Number(x.qty)||0)*c});
- const arr=Object.values(map);arr.forEach(x=>{x.margin=x.revenue-x.cmv;x.salesPct=totalRevenue?x.revenue/totalRevenue*100:0;x.cmvPct=arr.reduce((a,y)=>a+y.cmv,0)?x.cmv/arr.reduce((a,y)=>a+y.cmv,0)*100:0});
- arr.sort((a,b)=>b.revenue-a.revenue);let acc=0;arr.forEach(x=>{acc+=x.salesPct;x.accPct=acc;x.abc=acc<=80?'A':acc<=95?'B':'C'});
- return{arr,totalRevenue,totalCmv:arr.reduce((a,x)=>a+x.cmv,0)}
+ const cacheKey=fastCacheKey(['productMetricsV427',unit,from,to]);
+ if(metricCache.has(cacheKey))return metricCache.get(cacheKey);
+
+ const map={};
+ function addRow(code,product,qty,value,sourceUnit){
+   const p=masterProduct(code)||PRODUCTS.find(pp=>String(pp.produto||'').trim().toLowerCase()===String(product||'').trim().toLowerCase());
+   const canonicalCode=p?norm(p.ean):(code||product||'SEM');
+   const canonicalName=p?p.produto:(product||('EAN '+code));
+   const key=canonicalCode||canonicalName;
+   if(!map[key])map[key]={code:canonicalCode,product:canonicalName,qty:0,revenue:0,cmv:0};
+   const m=map[key];
+   m.qty+=Number(qty)||0;
+   m.revenue+=Number(value)||0;
+   const e=p?p.ean:code;
+   if(e&&sourceUnit)m.cmv+=(Number(qty)||0)*(Number(gs(sourceUnit,e).avgCost)||0);
+ }
+
+ // Historical Apr-Jul: use pre-aggregated rows (far fewer records).
+ const hist=abcHistoricalRows(unit,from,to);
+ if(hist){
+   hist.forEach(x=>addRow(x.code,x.product,x.qty,x.value,x.unit));
+ }
+
+ // New/manual/API sales outside historical seed: use raw rows, excluding duplicated seed source.
+ salesRows.forEach(x=>{
+   if(String(x.source||'')==='HISTORICO_ABR_JUL_2026')return;
+   const d=saleDateKey(x.datetime);
+   if(!d||from&&d<from||to&&d>to)return;
+   if(String(x.unit||'').toLowerCase().includes('cd - estoque central'))return;
+   if(unit&&unit!==TOTAL_UNIT&&x.unit!==unit)return;
+   addRow(x.code||x.ean,x.product,x.qty,x.value,x.unit);
+ });
+
+ const arr=Object.values(map);
+ const totalRevenue=arr.reduce((a,y)=>a+y.revenue,0);
+ const totalCmv=arr.reduce((a,y)=>a+y.cmv,0);
+ arr.forEach(x=>{
+   x.margin=x.revenue-x.cmv;
+   x.salesPct=totalRevenue?x.revenue/totalRevenue*100:0;
+   x.cmvPct=totalCmv?x.cmv/totalCmv*100:0;
+ });
+ arr.sort((a,b)=>b.revenue-a.revenue);
+
+ let acc=0;
+ arr.forEach(x=>{
+   const before=acc;
+   acc+=x.salesPct;
+   x.accPct=acc;
+   x.abc=before<80?'A':before<95?'B':'C';
+ });
+
+ const result={arr,totalRevenue,totalCmv};
+ metricCache.set(cacheKey,result);
+ return result;
+}
+function abcClassSummary(arr,totalRevenue){
+ const out={A:{count:0,revenue:0},B:{count:0,revenue:0},C:{count:0,revenue:0}};
+ arr.forEach(x=>{const g=out[x.abc]||out.C;g.count++;g.revenue+=Number(x.revenue)||0});
+ const totalProducts=arr.length;
+ Object.keys(out).forEach(k=>{
+   out[k].productPct=totalProducts?out[k].count/totalProducts*100:0;
+   out[k].revenuePct=totalRevenue?out[k].revenue/totalRevenue*100:0;
+ });
+ return out;
+}
+function renderAbcSummary(pm){
+ const el=document.getElementById('abcSummary');if(!el)return;
+ const abc=abcClassSummary(pm.arr,pm.totalRevenue);
+ el.innerHTML=['A','B','C'].map(k=>{
+   const x=abc[k];
+   return `<div class="abcSummaryCard abc${k}">
+     <div class="abcSummaryClass">CURVA ${k}</div>
+     <div class="abcSummaryNumber">${x.count.toLocaleString('pt-BR')}</div>
+     <div class="abcSummaryLabel">produtos • ${x.productPct.toFixed(1).replace('.',',')}% do mix</div>
+     <div class="abcSummaryRevenue">${brl(x.revenue)}</div>
+     <div class="abcSummaryLabel">${x.revenuePct.toFixed(1).replace('.',',')}% do faturamento total</div>
+   </div>`;
+ }).join('');
+}
+function renderAbcRows(){
+ if(!lastAbcAnalysis)return;
+ const arr=lastAbcAnalysis.arr;
+ const visible=arr.slice(0,abcVisibleRows);
+ document.getElementById('productTable').innerHTML=visible.map(x=>`<div class="abcrow abc${x.abc}"><div><b>${x.product}</b><br><small>${x.code||''} • ${Number(x.qty||0).toLocaleString('pt-BR')} un • margem ${brl(x.margin)}</small></div><div><b>${brl(x.revenue)}</b><br><small>${x.salesPct.toFixed(1).replace('.',',')}% venda</small></div><div><b>${brl(x.cmv)}</b><br><small>${x.cmvPct.toFixed(1).replace('.',',')}% CMV</small></div><div class="abcClass">${x.abc}<br><small>${x.accPct.toFixed(1).replace('.',',')}%</small></div></div>`).join('')||'<small>Sem vendas no período selecionado.</small>';
+ const info=document.getElementById('abcRowsInfo');
+ if(info)info.textContent=`Exibindo ${Math.min(abcVisibleRows,arr.length).toLocaleString('pt-BR')} de ${arr.length.toLocaleString('pt-BR')} produtos. Os totais e classes consideram todos os produtos.`;
+ const more=document.getElementById('abcShowMore'),all=document.getElementById('abcShowAll');
+ if(more)more.style.display=abcVisibleRows<arr.length?'':'none';
+ if(all)all.style.display=abcVisibleRows<arr.length?'':'none';
 }
 function renderProductAnalysis(){
- const f=document.getElementById('prodFrom').value,t=document.getElementById('prodTo').value,u=document.getElementById('prodUnit').value||'',sort=document.getElementById('prodSort').value,pm=productMetrics(u,f,t),arr=pm.arr.slice();
- arr.sort((a,b)=>b[sort]-a[sort]);
- document.getElementById('prodRevenue').textContent=brl(pm.totalRevenue);document.getElementById('prodCmv').textContent=brl(pm.totalCmv);document.getElementById('prodMargin').textContent=brl(pm.totalRevenue-pm.totalCmv);document.getElementById('prodSkus').textContent=arr.length;
- document.getElementById('productTable').innerHTML=arr.map(x=>`<div class="abcrow abc${x.abc}"><div><b>${x.product}</b><br><small>${x.code||''} • ${x.qty} un • margem ${brl(x.margin)}</small></div><div><b>${brl(x.revenue)}</b><br><small>${x.salesPct.toFixed(1).replace('.',',')}% venda</small></div><div><b>${brl(x.cmv)}</b><br><small>${x.cmvPct.toFixed(1).replace('.',',')}% CMV</small></div><div class="abcClass">${x.abc}<br><small>${x.accPct.toFixed(1).replace('.',',')}%</small></div></div>`).join('')||'<small>Sem vendas no período.</small>';
+ const f=document.getElementById('prodFrom').value,t=document.getElementById('prodTo').value,u=document.getElementById('prodUnit').value||TOTAL_UNIT,sort=document.getElementById('prodSort').value;
+ const pm=productMetrics(u,f,t);
+ const arr=pm.arr.slice().sort((a,b)=>b[sort]-a[sort]);
+ lastAbcAnalysis={...pm,arr};
+ abcVisibleRows=100;
+
+ document.getElementById('prodRevenue').textContent=brl(pm.totalRevenue);
+ document.getElementById('prodCmv').textContent=brl(pm.totalCmv);
+ document.getElementById('prodMargin').textContent=brl(pm.totalRevenue-pm.totalCmv);
+ document.getElementById('prodSkus').textContent=pm.arr.length.toLocaleString('pt-BR');
+
+ renderAbcSummary(pm);
+ renderAbcRows();
+ updatePeriodButtons('prod');
 }
-fillAnalysisUnitSelect('prodUnit');document.getElementById('refreshProducts').onclick=renderProductAnalysis;
-
-setAnalysisDefaults();
-
+fillAnalysisUnitSelect('prodUnit');
+document.getElementById('refreshProducts').onclick=()=>{delete renderCache.prod;renderProductAnalysisFast()};
+['prodFrom','prodTo','prodUnit','prodSort'].forEach(id=>document.getElementById(id)?.addEventListener('change',()=>{delete renderCache.prod;renderProductAnalysisFast()}));
+document.getElementById('abcShowMore').onclick=()=>{abcVisibleRows+=100;renderAbcRows()};
+document.getElementById('abcShowAll').onclick=()=>{abcVisibleRows=lastAbcAnalysis?lastAbcAnalysis.arr.length:100;renderAbcRows()};
 
 // ---------------- GRUPOS DE DEMANDA V4 ----------------
 let demandGroups=JSON.parse(localStorage.getItem('okeo_demand_groups_v35')||'{}');
@@ -997,14 +1174,27 @@ const DAY_NAMES=['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 const HOUR_BUCKETS=['00-05','06-08','09-11','12-14','15-17','18-20','21-23'];
 function hourBucket(h){if(h<=5)return'00-05';if(h<=8)return'06-08';if(h<=11)return'09-11';if(h<=14)return'12-14';if(h<=17)return'15-17';if(h<=20)return'18-20';return'21-23'}
 function timeRows(){
- const weeks=Number(document.getElementById('timeWeeks').value)||16,cut=cutoffDate(weeks),unit=document.getElementById('timeUnit').value||'',ean=selectedTimeEan;
- return analysisSalesRows().filter(x=>{const d=parseSaleDate(x.datetime),p=masterProduct(x.code),e=norm(p?p.ean:x.code);return d&&d>=cut&&(!unit||unit===TOTAL_UNIT||x.unit===unit)&&(!ean||e===ean)});
+ const unit=document.getElementById('timeUnit').value||TOTAL_UNIT,ean=selectedTimeEan;
+ if(optimizedHistoryReady&&historicalTimeRows.length){
+   return historicalTimeRows.filter(x=>{
+     if(unit&&unit!==TOTAL_UNIT&&x.unit!==unit)return false;
+     if(ean){
+       const p=masterProduct(x.code)||PRODUCTS.find(pp=>String(pp.produto||'').trim().toLowerCase()===String(x.product||'').trim().toLowerCase());
+       const e=norm(p?p.ean:x.code);if(e!==ean)return false;
+     }
+     return true;
+   }).map(x=>({agg:true,unit:x.unit,code:x.code,product:x.product,qty:x.qty,dow:x.dow,bucket:x.bucket}));
+ }
+ return analysisSalesRows().filter(x=>{
+   const p=saleMasterProduct(x),e=norm(p?p.ean:(x.ean||x.code));
+   return (!unit||unit===TOTAL_UNIT||x.unit===unit)&&(!ean||e===ean);
+ });
 }
 function renderTimeAnalysis(){
  fillAnalysisUnitSelect('timeUnit');
  const rows=timeRows(),days={},hours={},heat={};
  DAY_NAMES.forEach(d=>{days[d]=0;heat[d]={};HOUR_BUCKETS.forEach(h=>heat[d][h]=0)});HOUR_BUCKETS.forEach(h=>hours[h]=0);
- rows.forEach(x=>{const d=salesDateObj(x.datetime);if(!d)return;const day=DAY_NAMES[d.getDay()],hb=hourBucket(d.getHours()),q=Number(x.qty)||0;days[day]+=q;hours[hb]+=q;heat[day][hb]+=q});
+ rows.forEach(x=>{let day,hb;if(x.agg){day=DAY_NAMES[(Number(x.dow)+1)%7];hb=x.bucket}else{const d=salesDateObj(x.datetime);if(!d)return;day=DAY_NAMES[d.getDay()];hb=hourBucket(d.getHours())}const q=Number(x.qty)||0;days[day]+=q;hours[hb]+=q;heat[day][hb]+=q});
  const pd=Object.entries(days).sort((a,b)=>b[1]-a[1])[0]||['-',0],ph=Object.entries(hours).sort((a,b)=>b[1]-a[1])[0]||['-',0];
  document.getElementById('peakDay').textContent=pd[0];document.getElementById('peakHour').textContent=ph[0];document.getElementById('peakDayQty').textContent=pd[1].toLocaleString('pt-BR');document.getElementById('peakHourQty').textContent=ph[1].toLocaleString('pt-BR');
  document.getElementById('weekdayTable').innerHTML=Object.entries(days).sort((a,b)=>b[1]-a[1]).map(([k,v])=>`<div class="timerow"><b>${k}</b><span>${v.toLocaleString('pt-BR')} un</span></div>`).join('');
@@ -1056,21 +1246,35 @@ function currentStockFor(unit,ean){
 }
 
 function salesForReplenishment(weeks,unitFilter){
- const endDate=new Date(HISTORY_END+'T23:59:59'),cut=new Date(endDate);cut.setDate(cut.getDate()-weeks*7+1);
+ const end='2026-07-31';
+ const endD=new Date(end+'T12:00:00'),cut=new Date(endD);cut.setDate(cut.getDate()-weeks*7+1);
  const cutoff=`${cut.getFullYear()}-${String(cut.getMonth()+1).padStart(2,'0')}-${String(cut.getDate()).padStart(2,'0')}`;
  const map={};
+
+ if(optimizedHistoryReady&&historicalWeeklyRows.length){
+   historicalWeeklyRows.forEach(x=>{
+     if(x.week<cutoff||x.week>end)return;
+     if(unitFilter&&unitFilter!==TOTAL_UNIT&&x.unit!==unitFilter)return;
+     const p=masterProduct(x.code)||PRODUCTS.find(pp=>String(pp.produto||'').trim().toLowerCase()===String(x.product||'').trim().toLowerCase());
+     const ean=norm(p?p.ean:x.code);if(!ean)return;
+     const key=x.unit+'|'+ean;
+     if(!map[key])map[key]={unit:x.unit,ean,product:p?p.produto:x.product,weeks:{},total:0};
+     map[key].weeks[x.week]=(map[key].weeks[x.week]||0)+Number(x.qty||0);
+     map[key].total+=Number(x.qty||0);
+   });
+   return map;
+ }
+
+ // fallback
  analysisSalesRows().forEach(x=>{
-   const date=saleDateKey(x.datetime);
-   if(!date||date<cutoff||date>HISTORY_END)return;
+   const date=saleDateKey(x.datetime);if(!date||date<cutoff||date>end)return;
    if(String(x.unit||'').toLowerCase().includes('cd - estoque central'))return;
    if(unitFilter&&unitFilter!==TOTAL_UNIT&&x.unit!==unitFilter)return;
-   const p=saleMasterProduct(x),ean=norm(p?p.ean:(x.ean||x.code));
-   if(!ean)return;
+   const p=saleMasterProduct(x),ean=norm(p?p.ean:(x.ean||x.code));if(!ean)return;
    const key=x.unit+'|'+ean;
    if(!map[key])map[key]={unit:x.unit,ean,product:(p?p.produto:x.product)||('EAN '+ean),weeks:{},total:0};
    const wk=weekStart(date),q=Number(x.qty)||0;
-   map[key].weeks[wk]=(map[key].weeks[wk]||0)+q;
-   map[key].total+=q;
+   map[key].weeks[wk]=(map[key].weeks[wk]||0)+q;map[key].total+=q;
  });
  return map;
 }
@@ -1293,10 +1497,26 @@ function monthlyMetrics(month,unit=''){
 }
 function saveMonthlyClosing(month){if(!month)return;const us=Array.from(new Set(analysisSalesRows().filter(x=>rowMonth(x)===month).map(x=>x.unit).filter(Boolean)));monthlyClosings[closingKey(month,'')]=monthlyMetrics(month,TOTAL_UNIT);us.forEach(u=>monthlyClosings[closingKey(month,u)]=monthlyMetrics(month,u));localStorage.setItem('okeo_monthly_closings_v36',JSON.stringify(monthlyClosings))}
 function renderMonthlyHistory(){
- fillAnalysisUnitSelect('monthlyUnit');const u=document.getElementById('monthlyUnit').value||TOTAL_UNIT;
- const months=Array.from(new Set(analysisSalesRows().map(rowMonth).filter(Boolean))).sort().reverse();
- const rows=months.map(m=>monthlyMetrics(m,u)).filter(x=>x.revenue||x.unitsSold);
- document.getElementById('monthlyHistoryTable').innerHTML='<div class="monthrow2"><b>Mês</b><b>Faturamento</b><b>Tickets</b><b>Ticket médio</b><b>CMV</b><b>Margem</b></div>'+rows.map(x=>`<div class="monthrow2"><b>${x.month}</b><span>${brl(x.revenue)}</span><span>${x.tickets}</span><span>${brl(x.avgTicket)}</span><span>${brl(x.cmv)}</span><span>${Number(x.grossMargin||0).toFixed(1).replace('.',',')}%</span></div>`).join('');
+ fillAnalysisUnitSelect('monthlyUnit');
+ const u=document.getElementById('monthlyUnit').value||TOTAL_UNIT,by={};
+
+ if(optimizedHistoryReady&&historicalUnitDayRows.length){
+   historicalUnitDayRows.forEach(x=>{
+     if(u!==TOTAL_UNIT&&x.unit!==u)return;
+     const m=x.date.slice(0,7);
+     if(!by[m])by[m]={revenue:0,unitsSold:0,tickets:0,cmv:0};
+     by[m].revenue+=Number(x.value)||0;by[m].unitsSold+=Number(x.qty)||0;by[m].tickets+=Number(x.tickets)||0;
+   });
+ }else{
+   ['2026-04','2026-05','2026-06','2026-07'].forEach(m=>{
+     const sm=salesMetrics(u,m+'-01',m+'-31');by[m]={revenue:sm.revenue,unitsSold:sm.unitsSold,tickets:sm.tickets,cmv:sm.cmv};
+   });
+ }
+ const rows=Object.entries(by).sort((a,b)=>b[0].localeCompare(a[0]));
+ document.getElementById('monthlyTable').innerHTML=rows.map(([m,x])=>{
+   const avg=x.tickets?x.revenue/x.tickets:0,margin=x.revenue-x.cmv,pct=x.revenue?margin/x.revenue*100:0;
+   return `<div class="monthlyrow"><b>${m}</b><span>${brl(x.revenue)}</span><span>${x.tickets.toLocaleString('pt-BR')}</span><span>${brl(avg)}</span><span>${brl(x.cmv)}</span><span>${pct.toFixed(1).replace('.',',')}%</span></div>`;
+ }).join('')||'<small>Sem histórico.</small>';
 }
 document.getElementById('refreshMonthly').onclick=async()=>{await loadHistoricalSales(false);renderMonthlyHistory()};document.getElementById('monthlyUnit').onchange=renderMonthlyHistory;
 function salesRevenueForMonthUnit(month,unit){return monthlyMetrics(month,unit).revenue}
@@ -1649,7 +1869,7 @@ function totalStockMetrics(){
    if(await validateSession()){
      document.getElementById('loginOverlay').style.display='none';
      applyRoleUI();
-     await loadHistoricalSales(false);setAnalysisDefaults();
+     await Promise.all([loadHistoricalSales(false),loadHistoricalAbcAggregate(),loadOptimizedHistory()]);setAnalysisDefaults();
      renderHomeDashboard();
      showTab('inventario');
      flushSyncQueue();
