@@ -69,6 +69,9 @@ main{max-width:1180px!important}
 @media(max-width:700px){.abcSummary{grid-template-columns:1fr}}
 
 .perfBadge{display:inline-block;margin-left:8px;padding:3px 7px;border-radius:999px;background:#e7f5ec;color:#26744a;font-size:10px;font-weight:800;vertical-align:middle}
+
+.historyBgStatus{margin-left:8px;padding:3px 7px;border-radius:999px;background:#edf4ff;color:#365f91;font-size:10px;font-weight:700}
+#loginBtn:disabled{opacity:.75;cursor:wait}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
@@ -90,7 +93,7 @@ main{max-width:1180px!important}
   <div class="heroLogo"><img src="okeo-logo.png" alt="OKEO"></div>
   <div>
     <h2 style="margin:0">OKEO Gestão</h2>
-    <div class="muted">Gestão integrada de estoque, vendas, financeiro e reposição</div>
+    <div class="muted">Gestão integrada de estoque, vendas, financeiro e reposição</div><span id="historyBackgroundStatus" class="historyBgStatus" style="display:none"></span>
   </div>
 </div>
 <div id="roleAccessBanner" class="roleAccessBanner" style="display:none">
@@ -655,11 +658,23 @@ function fastRender(name,parts,fn){
  renderCache[name]=k;fn();
 }
 function valueFast(id){return document.getElementById(id)?.value||''}
-function renderProductAnalysisFast(){fastRender('prod',[valueFast('prodFrom'),valueFast('prodTo'),valueFast('prodUnit'),valueFast('prodSort')],renderProductAnalysis)}
+async function renderProductAnalysisFast(){
+ if(!historicalAbcReady)await loadHistoricalAbcAggregate();
+ fastRender('prod',[valueFast('prodFrom'),valueFast('prodTo'),valueFast('prodUnit'),valueFast('prodSort')],renderProductAnalysis)
+}
 function renderDreFast(){fastRender('dre',[valueFast('dreFrom'),valueFast('dreTo'),valueFast('dreUnit')],renderDre)}
-function renderReplenishmentFast(){fastRender('repl',[valueFast('replWeeks'),valueFast('replMinFactor'),valueFast('replMaxFactor'),valueFast('replUnit'),valueFast('replSupplier'),valueFast('replStatus'),valueFast('replSearch'),JSON.stringify(productGroup),JSON.stringify(demandGroups)],renderReplenishment)}
-function renderTimeAnalysisFast(){fastRender('time',[valueFast('timeWeeks'),valueFast('timeUnit'),String(selectedTimeEan||'')],renderTimeAnalysis)}
-function renderMonthlyHistoryFast(){fastRender('monthly',[valueFast('monthlyUnit')],renderMonthlyHistory)}
+async function renderReplenishmentFast(){
+ if(!optimizedHistoryReady)await loadOptimizedHistory();
+ fastRender('repl',[valueFast('replWeeks'),valueFast('replMinFactor'),valueFast('replMaxFactor'),valueFast('replUnit'),valueFast('replSupplier'),valueFast('replStatus'),valueFast('replSearch'),JSON.stringify(productGroup),JSON.stringify(demandGroups)],renderReplenishment)
+}
+async function renderTimeAnalysisFast(){
+ if(!optimizedHistoryReady)await loadOptimizedHistory();
+ fastRender('time',[valueFast('timeWeeks'),valueFast('timeUnit'),String(selectedTimeEan||'')],renderTimeAnalysis)
+}
+async function renderMonthlyHistoryFast(){
+ if(!optimizedHistoryReady)await loadOptimizedHistory();
+ fastRender('monthly',[valueFast('monthlyUnit')],renderMonthlyHistory)
+}
 function renderSalesHistoryFast(){fastRender('salesHistory',[valueFast('histUnit')],renderSalesHistory)}
 function showTab(name){
  applyRoleUI();
@@ -767,6 +782,31 @@ async function loadOptimizedHistory(){
    console.warn('Optimized history unavailable',e);
  }
 }
+
+let historyBackgroundLoading=false;
+async function loadHistoryInBackground(){
+ if(historyBackgroundLoading)return;
+ historyBackgroundLoading=true;
+ const badge=document.getElementById('historyBackgroundStatus');
+ if(badge){badge.style.display='inline-block';badge.textContent='Carregando histórico...'}
+ try{
+   await Promise.all([
+     loadHistoricalSales(false),
+     loadHistoricalAbcAggregate(),
+     loadOptimizedHistory()
+   ]);
+   invalidateAnalysisCache();
+   if(badge){badge.textContent='Histórico pronto';setTimeout(()=>badge.style.display='none',1800)}
+   // Atualiza indicadores leves após os dados ficarem prontos sem bloquear login.
+   setTimeout(()=>{try{renderHomeDashboard()}catch(e){}},0);
+ }catch(e){
+   console.warn('Background history load',e);
+   if(badge){badge.textContent='Histórico será carregado ao abrir relatório'}
+ }finally{
+   historyBackgroundLoading=false;
+ }
+}
+
 let historicalAbcRows=[];
 let historicalAbcReady=false;
 async function loadHistoricalAbcAggregate(){
@@ -1868,9 +1908,7 @@ function totalStockMetrics(){
  try{
    if(await validateSession()){
      document.getElementById('loginOverlay').style.display='none';
-     applyRoleUI();
-     await Promise.all([loadHistoricalSales(false),loadHistoricalAbcAggregate(),loadOptimizedHistory()]);setAnalysisDefaults();
-     renderHomeDashboard();
+     applyRoleUI();setAnalysisDefaults();renderHomeDashboard();loadHistoryInBackground();
      showTab('inventario');
      flushSyncQueue();
    }else{
