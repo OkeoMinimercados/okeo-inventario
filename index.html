@@ -131,6 +131,10 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .salesKpis{grid-template-columns:repeat(6,1fr)}#salesReportRows{content-visibility:auto;contain:layout paint style;contain-intrinsic-size:900px}.salesEmpty{padding:22px;color:#687580;text-align:center}
 .salesGroupedHeader,.salesGroupedRow{display:grid;grid-template-columns:minmax(220px,2fr) repeat(5,minmax(100px,1fr));min-width:900px}.salesGroupedHeader{background:#f2f5f7;font-size:11px;font-weight:800}.salesGroupedHeader>*,.salesGroupedRow>*{padding:9px 8px;border-right:1px solid #e7eaed;border-bottom:1px solid #e7eaed;font-size:11px}.salesGroupedRow:nth-child(even){background:#fafcfd}
 @media(max-width:1000px){.salesFilterGrid{grid-template-columns:repeat(2,1fr)}.salesKpis{grid-template-columns:repeat(3,1fr)}}@media(max-width:600px){.salesFilterGrid{grid-template-columns:1fr}.salesTitleRow,.salesResultHeader{align-items:flex-start;flex-direction:column}.salesKpis{grid-template-columns:1fr 1fr}}
+
+.moduleAsyncStatus{padding:4px 8px;border-radius:999px;font-size:10px;font-weight:800;background:#eaf3ff;color:#2a5f91}
+.appTab{contain:layout style;content-visibility:auto;contain-intrinsic-size:700px}
+.moduleCard{transform:translateZ(0);will-change:auto}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
@@ -142,14 +146,14 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <div class="muted">Acesso ao sistema</div>
     <label>Usuário</label><input id="loginUser" autocomplete="username">
     <label>Senha</label><input id="loginPass" type="password" autocomplete="current-password">
-    <button class="green" id="loginBtn" type="button" onclick="return okeoDirectLogin(event)">Entrar</button><div class="loginHealth"><span id="loginJsStatus">JavaScript: iniciando...</span><span id="loginBackendStatus">Base Central: verificando...</span></div><div class="loginVersion">OKEO Gestão V6.1.0</div>
+    <button class="green" id="loginBtn" type="button" onclick="return okeoDirectLogin(event)">Entrar</button><div class="loginHealth"><span id="loginJsStatus">JavaScript: iniciando...</span><span id="loginBackendStatus">Base Central: verificando...</span></div><div class="loginVersion">OKEO Gestão V6.2.0</div>
     <div id="loginMsg" class="status"></div>
   </div>
 </div>
 
 
 <header><span class="headerBrand"><span class="brandLogoMini"><img src="okeo-logo.png" alt="OKEO"></span> OKEO • Gestão</span> <span id="net" class="pill">online</span></header><main>
-<div id="systemStatusBar" class="systemStatusBar">
+<div id="systemStatusBar" class="systemStatusBar"><span id="moduleAsyncStatus" class="moduleAsyncStatus" style="display:none"></span>
   <span id="onlineStatus" class="onlineStatus">Online</span>
   <span id="storageHealth" class="storageHealth">Armazenamento: verificando...</span>
   <span id="safeModeBadge" class="safeModeBadge" style="display:none">MODO SEGURO</span>
