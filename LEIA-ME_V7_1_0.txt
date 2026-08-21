@@ -1,0 +1,35 @@
+OKEO GESTÃO V7.1.0 FULL COMPATIBILITY
+
+CORREÇÃO:
+A V7.0.x simplificou módulos demais e perdeu funcionalidades.
+A V7.1 preserva a arquitetura rápida do shell, mas usa os módulos COMPLETOS da V6.3
+como camada de compatibilidade até cada módulo ser migrado integralmente.
+
+FUNCIONALIDADES PRESERVADAS:
+- Inventário completo, incluindo câmera/foto/código de barras, +/−, digitação direta e validade.
+- Entrada por NF completa.
+- Relatórios/Dashboard completos.
+- Vendas e filtros.
+- Curva ABC completa.
+- Reposição Inteligente completa.
+- DRE completa e campos personalizados.
+- Gestão Executiva.
+- Movimentações/estoque.
+- Fornecedores.
+- Grupos de Demanda.
+- Dias/Horários.
+- Histórico mensal.
+- Política de dados.
+- Controle de acesso.
+- Saúde do sistema.
+- Demais funções existentes na V6.3.
+
+ARQUITETURA:
+- Login/menu V7 continuam leves.
+- A camada completa antiga só é carregada quando o primeiro módulo operacional/analítico é aberto.
+- Depois do primeiro carregamento, o iframe é persistente e não é recarregado a cada módulo.
+- Login V7 compartilha a sessão com a camada de compatibilidade.
+- Erros AbortError/signal aborted são suprimidos quando são apenas cancelamento técnico.
+
+BACKEND:
+Mantém Base Central V4.0. Não precisa alterar Apps Script.

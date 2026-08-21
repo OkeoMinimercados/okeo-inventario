@@ -10,13 +10,15 @@ export async function login(username,password){
  const c=await rawGet('login_challenge',{username});if(!c?.ok)throw new Error(c?.error||'Falha no desafio');
  const ph=await sha(`${c.salt}|${password}`),proof=await sha(`${c.nonce}|${ph}`);
  const v=await rawGet('login_verify',{username,nonce:c.nonce,proof});if(!v?.ok)throw new Error(v?.error||'Usuário ou senha inválidos');
- localStorage.setItem('okeo_v7_token',v.token);localStorage.setItem('okeo_v7_user',JSON.stringify(v.user||{}));return v.user||{};
+ localStorage.setItem('okeo_v7_token',v.token);localStorage.setItem('okeo_v7_user',JSON.stringify(v.user||{}));
+ localStorage.setItem('okeo_auth_token_v39',v.token);localStorage.setItem('okeo_auth_user_v434',JSON.stringify(v.user||{}));localStorage.setItem('okeo_session_confirmed_v435','1');
+ return v.user||{};
 }
 export async function restore(){
  const token=localStorage.getItem('okeo_v7_token');if(!token)return null;
- try{const u=new URL(BASE);u.searchParams.set('action','session');u.searchParams.set('token',token);const r=await fetch(u,{cache:'no-store'});const j=await r.json();if(j?.ok){localStorage.setItem('okeo_v7_user',JSON.stringify(j.user));return j.user}}catch(e){}
+ try{const u=new URL(BASE);u.searchParams.set('action','session');u.searchParams.set('token',token);const r=await fetch(u,{cache:'no-store'});const j=await r.json();if(j?.ok){localStorage.setItem('okeo_v7_user',JSON.stringify(j.user));localStorage.setItem('okeo_auth_token_v39',token);localStorage.setItem('okeo_auth_user_v434',JSON.stringify(j.user||{}));localStorage.setItem('okeo_session_confirmed_v435','1');return j.user}}catch(e){}
  logout();return null;
 }
 export function currentUser(){try{return JSON.parse(localStorage.getItem('okeo_v7_user')||'null')}catch(e){return null}}
-export function logout(){localStorage.removeItem('okeo_v7_token');localStorage.removeItem('okeo_v7_user')}
+export function logout(){localStorage.removeItem('okeo_v7_token');localStorage.removeItem('okeo_v7_user');localStorage.removeItem('okeo_auth_token_v39');localStorage.removeItem('okeo_auth_user_v434');localStorage.removeItem('okeo_session_confirmed_v435')}
 export async function health(){try{const s=await status();return s?.ok}catch(e){return false}}

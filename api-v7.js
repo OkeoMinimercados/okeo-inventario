@@ -30,3 +30,8 @@ export async function post(action,data,opts={}){
   }finally{clearTimeout(timer)}
 }
 export async function status(){return get('status',{},{cache:false,timeout:5000,stale:false})}
+
+window.addEventListener('unhandledrejection',e=>{
+ const m=String(e.reason?.message||e.reason||'');
+ if(/signal is aborted|aborterror|aborted without reason/i.test(m))e.preventDefault();
+});
