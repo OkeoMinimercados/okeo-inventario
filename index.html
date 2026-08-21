@@ -47,7 +47,21 @@ main{max-width:1180px!important}
 .consolidatedNote{padding:12px 15px;background:#f8fbf9;color:#376246;font-size:12px;border-top:1px solid #e2ebe5}
 @media(max-width:900px){.kpiGrid,.moduleGrid{grid-template-columns:repeat(2,1fr)}.consolidatedMetrics{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.kpiGrid,.moduleGrid{grid-template-columns:1fr}.consolidatedMetrics{grid-template-columns:1fr}.consolidatedMetrics>div{border-right:0;border-bottom:1px solid #edf0f2}.homeHero{display:none}}
-.roleAccessBanner{margin:10px 0;padding:10px 12px;border-radius:10px;background:#fff3cd;border:1px solid #f3d98b;color:#745b00;font-size:13px;font-weight:700}.dreEditHeader,.dreEditRow{display:grid;grid-template-columns:1.3fr .8fr .45fr;gap:8px;align-items:center;padding:9px 6px;border-top:1px solid #e5e9ed}.dreEditHeader{background:#17365d;color:#fff;border-radius:8px;border-top:0}.dreEditRow input{margin:0!important;text-align:right}.dreEditRow.total{background:#e8f5e9;font-size:16px}.historyStatus{margin:7px 0;padding:7px 9px;border-radius:8px;font-size:12px}.historyStatus.ok{background:#e8f5e9;color:#246b43}.historyStatus.warn{background:#fff3cd;color:#725600}</style>
+.roleAccessBanner{margin:10px 0;padding:10px 12px;border-radius:10px;background:#fff3cd;border:1px solid #f3d98b;color:#745b00;font-size:13px;font-weight:700}.dreEditHeader,.dreEditRow{display:grid;grid-template-columns:1.3fr .8fr .45fr;gap:8px;align-items:center;padding:9px 6px;border-top:1px solid #e5e9ed}.dreEditHeader{background:#17365d;color:#fff;border-radius:8px;border-top:0}.dreEditRow input{margin:0!important;text-align:right}.dreEditRow.total{background:#e8f5e9;font-size:16px}.historyStatus{margin:7px 0;padding:7px 9px;border-radius:8px;font-size:12px}.historyStatus.ok{background:#e8f5e9;color:#246b43}.historyStatus.warn{background:#fff3cd;color:#725600}
+.moduleLoading{position:sticky;top:4px;z-index:100;align-items:center;gap:8px;margin:4px 0 8px;padding:7px 11px;border-radius:9px;background:#eef7f2;color:#276143;font-size:12px;font-weight:700;box-shadow:0 2px 8px #0001}
+.loadingDot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#278354;animation:okeoPulse .55s infinite alternate}
+@keyframes okeoPulse{from{opacity:.3;transform:scale(.8)}to{opacity:1;transform:scale(1.15)}}
+.appTab{animation:okeoFade .08s ease-out}
+@keyframes okeoFade{from{opacity:.72}to{opacity:1}}
+.moduleCard{transition:transform .06s ease,box-shadow .06s ease!important}
+
+.replFullRow{display:grid;grid-template-columns:minmax(230px,2.2fr) minmax(130px,1.2fr) repeat(6,minmax(70px,.65fr)) minmax(90px,.8fr);gap:7px;align-items:center;padding:9px 8px;border-top:1px solid #e5e9ed;font-size:12px;min-width:1050px}
+.replHeader{background:#f2f5f7;font-size:11px;position:sticky;top:0}.replgroup{overflow:auto;margin-bottom:16px;border:1px solid #e1e6ea;border-radius:10px}.replhead{padding:10px 12px;background:#17365d;color:#fff;font-weight:800;position:sticky;left:0}
+.replFullRow.REPOR{background:#fff0ef}.replFullRow.ATENCAO{background:#fff8df}.replFullRow.OK{background:#f2faf4}.replFullRow.SEM_GIRO{background:#f4f5f6;color:#65717c}
+.replStatus{display:inline-block;padding:4px 7px;border-radius:999px;font-size:10px;font-weight:800;white-space:nowrap}.replStatus.REPOR{background:#d94b45;color:#fff}.replStatus.ATENCAO{background:#e5a91c;color:#fff}.replStatus.OK{background:#2c965b;color:#fff}.replStatus.SEM_GIRO{background:#7a8791;color:#fff}
+.replGroupMetrics{display:flex;gap:18px;flex-wrap:wrap;padding:8px 12px;background:#eef5ff;border-bottom:1px solid #dce7f5;font-size:11px;position:sticky;left:0}
+@media(max-width:700px){.replFullRow{min-width:980px}.replGroupMetrics{gap:9px}}
+</style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
@@ -63,6 +77,7 @@ main{max-width:1180px!important}
   </div>
 </div>
 <header><span class="headerBrand"><span class="brandLogoMini"><img src="okeo-logo.png" alt="OKEO"></span> OKEO • Gestão</span> <span id="net" class="pill">online</span></header><main>
+<div id="moduleLoading" class="moduleLoading" style="display:none"><span class="loadingDot"></span> Atualizando informações...</div>
 <div id="homeTop" class="homeHero card">
   <div class="heroLogo"><img src="okeo-logo.png" alt="OKEO"></div>
   <div>
@@ -258,7 +273,7 @@ main{max-width:1180px!important}
 <div id="tab-reposicao" class="appTab" style="display:none">
   <div class="card">
     <b>Reposição Inteligente</b>
-    <div class="muted">Calculada a partir do histórico de vendas por produto e condomínio.</div>
+    <div class="muted">Visão completa de todos os produtos. Produtos similares agrupados são avaliados pela demanda e estoque total do grupo antes de gerar sugestão de reposição.</div>
 
     <div class="row">
       <div>
@@ -296,6 +311,11 @@ main{max-width:1180px!important}
     <label>Fornecedor</label>
     <select id="replSupplier"></select>
 
+    <div class="row">
+      <div><label>Status</label><select id="replStatus"><option value="">Todos</option><option value="REPOR">Repor</option><option value="ATENCAO">Atenção</option><option value="OK">OK</option><option value="SEM_GIRO">Sem giro</option></select></div>
+      <div><label>Pesquisar produto / EAN</label><input id="replSearch" placeholder="Produto, EAN ou grupo"></div>
+    </div>
+
     <button class="green" id="refreshRepl">Calcular reposição</button>
     <button class="gray" id="downloadRepl">Baixar relatório CSV</button><button class="green" id="pdfRepl">Gerar PDF de reposição</button>
   </div>
@@ -313,7 +333,7 @@ main{max-width:1180px!important}
 
   <div class="card">
     <b>Relatório de reposição</b>
-    <div class="muted">Só entra na sugestão de compra quando estoque atual ≤ estoque mínimo.</div>
+    <div class="muted">Todos os produtos são exibidos. A sugestão de compra considera estoque mínimo, estoque ideal, pico de vendas e, quando houver, o saldo consolidado do grupo de produtos similares.</div>
     <div id="replTable"></div>
   </div>
 </div>
@@ -599,8 +619,63 @@ let stockLedger=JSON.parse(localStorage.getItem('okeo_stock_v3')||'{}');
 let invoiceLines=[],nfStream=null;
 let API_URL=localStorage.getItem('okeo_api_url')||'';
 
+
+let performanceRevision=1;
+let mergedSalesCache=null;
+let mergedSalesCacheRevision=0;
+const metricCache=new Map();
+const renderCache={};
+
+function invalidateAnalysisCache(){
+ performanceRevision++;
+ mergedSalesCache=null;
+ metricCache.clear();
+ Object.keys(renderCache).forEach(k=>delete renderCache[k]);
+}
+function setModuleLoading(on){
+ const e=document.getElementById('moduleLoading');if(e)e.style.display=on?'flex':'none';
+}
+function fastCacheKey(parts){return performanceRevision+'|'+parts.join('|')}
+function fastRender(name,parts,fn){
+ const k=fastCacheKey(parts);
+ if(renderCache[name]===k)return;
+ renderCache[name]=k;fn();
+}
+function valueFast(id){return document.getElementById(id)?.value||''}
+function renderProductAnalysisFast(){fastRender('prod',[valueFast('prodFrom'),valueFast('prodTo'),valueFast('prodUnit'),valueFast('prodSort')],renderProductAnalysis)}
+function renderDreFast(){fastRender('dre',[valueFast('dreFrom'),valueFast('dreTo'),valueFast('dreUnit')],renderDre)}
+function renderReplenishmentFast(){fastRender('repl',[valueFast('replWeeks'),valueFast('replMinFactor'),valueFast('replMaxFactor'),valueFast('replUnit'),valueFast('replSupplier'),valueFast('replStatus'),valueFast('replSearch'),JSON.stringify(productGroup),JSON.stringify(demandGroups)],renderReplenishment)}
+function renderTimeAnalysisFast(){fastRender('time',[valueFast('timeWeeks'),valueFast('timeUnit'),String(selectedTimeEan||'')],renderTimeAnalysis)}
+function renderMonthlyHistoryFast(){fastRender('monthly',[valueFast('monthlyUnit')],renderMonthlyHistory)}
+function renderSalesHistoryFast(){fastRender('salesHistory',[valueFast('histUnit')],renderSalesHistory)}
 function showTab(name){
- applyRoleUI();if(!authState.user||document.getElementById('loginOverlay')?.style.display!=='none'){return;}if(!canAccessModule(name)){alert('Seu perfil não possui acesso a este módulo.');return;}document.querySelectorAll('.appTab').forEach(x=>x.style.display='none');const e=document.getElementById('tab-'+name);if(e)e.style.display='block';if(name==='movimentos')renderStock();if(name==='dashboard')renderDashboard();if(name==='financeiro')renderCash();if(name==='dre')renderDre();if(name==='faturamento')renderSalesHistory();if(name==='produtos')renderProductAnalysis();if(name==='reposicao')renderReplenishment();if(name==='fornecedores')renderSupplierList();if(name==='grupos')renderDemandGroups();if(name==='horarios')renderTimeAnalysis();if(name==='mensal')renderMonthlyHistory();if(name==='cashback')renderPaymentModule();if(name==='fiscal')renderFiscal();if(name==='integracao')renderIntegration();if(name==='acessos')renderUsers()}
+ applyRoleUI();
+ if(!authState.user||document.getElementById('loginOverlay')?.style.display!=='none')return;
+ if(!canAccessModule(name)){alert('Seu perfil não possui acesso a este módulo.');return;}
+ document.querySelectorAll('.appTab').forEach(x=>x.style.display='none');
+ const e=document.getElementById('tab-'+name);if(e)e.style.display='block';
+ window.scrollTo(0,0);
+ setModuleLoading(true);
+ requestAnimationFrame(()=>setTimeout(()=>{
+   try{
+     if(name==='movimentos')renderStock();
+     if(name==='dashboard')renderDashboard();
+     if(name==='financeiro')renderCash();
+     if(name==='dre')renderDreFast();
+     if(name==='faturamento')renderSalesHistoryFast();
+     if(name==='produtos')renderProductAnalysisFast();
+     if(name==='reposicao')renderReplenishmentFast();
+     if(name==='fornecedores')renderSupplierList();
+     if(name==='grupos')renderDemandGroups();
+     if(name==='horarios')renderTimeAnalysisFast();
+     if(name==='mensal')renderMonthlyHistoryFast();
+     if(name==='cashback')renderPaymentModule();
+     if(name==='fiscal')renderFiscal();
+     if(name==='integracao')renderIntegration();
+     if(name==='acessos')renderUsers();
+   }finally{setModuleLoading(false)}
+ },0));
+}
 window.showTab=showTab;
 function fillUnitSelect(id,blank=false){const s=document.getElementById(id);if(!s)return;s.innerHTML=(blank?'<option value="">Nenhuma / externa</option>':'')+units.map(u=>`<option value="${u}">${u}</option>`).join('')}
 ['moveFrom','moveTo','stockUnit','nfUnit','dashUnit'].forEach(id=>fillUnitSelect(id,id==='moveFrom'||id==='moveTo'));
@@ -612,7 +687,7 @@ function gs(u,e){return stockLedger[sk(u,e)]||{qty:0,avgCost:0}}
 function ss(u,e,q,c){stockLedger[sk(u,e)]={qty:Math.max(0,Number(q)||0),avgCost:Math.max(0,Number(c)||0)};localStorage.setItem('okeo_stock_v3',JSON.stringify(stockLedger))}
 function addStock(u,e,q,c){if(!u)return;const s=gs(u,e),n=s.qty+q;let a=s.avgCost;if(q>0&&c>0&&n>0)a=((s.qty*s.avgCost)+(q*c))/n;ss(u,e,n,a)}
 function subStock(u,e,q){if(!u)return;const s=gs(u,e);ss(u,e,s.qty-q,s.avgCost)}
-function applyMovement(m){const q=Number(m.qty)||0,c=Number(m.unitCost)||0;if(!q||!m.ean)return false;if(m.type==='TRANSFERENCIA'){const ac=gs(m.from,m.ean).avgCost||c;subStock(m.from,m.ean,q);addStock(m.to,m.ean,q,ac)}else if(m.type==='ENTRADA_COMPRA'||m.type==='AJUSTE_POSITIVO')addStock(m.to||m.from,m.ean,q,c);else subStock(m.from||m.to,m.ean,q);movements.push(m);localStorage.setItem('okeo_movements_v3',JSON.stringify(movements));syncMovement(m);return true}
+function applyMovement(m){const q=Number(m.qty)||0,c=Number(m.unitCost)||0;if(!q||!m.ean)return false;if(m.type==='TRANSFERENCIA'){const ac=gs(m.from,m.ean).avgCost||c;subStock(m.from,m.ean,q);addStock(m.to,m.ean,q,ac)}else if(m.type==='ENTRADA_COMPRA'||m.type==='AJUSTE_POSITIVO')addStock(m.to||m.from,m.ean,q,c);else subStock(m.from||m.to,m.ean,q);movements.push(m);localStorage.setItem('okeo_movements_v3',JSON.stringify(movements));invalidateAnalysisCache();syncMovement(m);return true}
 async function syncMovement(m){if(!API_URL)return;try{await fetch(API_URL,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify({action:'movement',data:m})})}catch(e){}}
 async function loadRemoteMaster(){if(!API_URL)return;try{const r=await fetch(API_URL+'?action=master&t='+Date.now());if(!r.ok)return;const d=await r.json();if(Array.isArray(d.units)&&d.units.length){units=d.units;['moveFrom','moveTo','stockUnit','nfUnit','dashUnit'].forEach(id=>fillUnitSelect(id,id==='moveFrom'||id==='moveTo'))}if(Array.isArray(d.products)&&d.products.length){PRODUCTS=d.products.map(p=>({condominio:'',codigo:'',ean:String(p.ean||''),produto:p.produto||'',fabricante:p.fabricante||'',categoria:p.categoria||'',ncm:p.ncm||'',cest:p.cest||'',ean_adicional:p.ean_adicional||''}))}}catch(e){}}
 loadRemoteMaster();
@@ -671,8 +746,10 @@ async function loadHistoricalSales(force=false){
  return historicalSalesRows.length;
 }
 function analysisSalesRows(){
+ if(mergedSalesCache&&mergedSalesCacheRevision===performanceRevision)return mergedSalesCache;
  const out=[],seen=new Set();
  [...historicalSalesRows,...salesRows].forEach(x=>{const fp=saleFingerprint(x);if(!seen.has(fp)){seen.add(fp);out.push(x)}});
+ mergedSalesCache=out;mergedSalesCacheRevision=performanceRevision;
  return out;
 }
 function setAnalysisDefaults(){
@@ -751,14 +828,14 @@ document.getElementById('importSales').onclick=async()=>{
      const seen=new Set(),clean=[];
      rows.filter(x=>rowMonth(x)===month).forEach(x=>{const fp=saleFingerprint(x);if(!seen.has(fp)){seen.add(fp);clean.push(x)}});
      salesRows.push(...clean);
-     localStorage.setItem('okeo_sales_v32',JSON.stringify(salesRows));
+     localStorage.setItem('okeo_sales_v32',JSON.stringify(salesRows));invalidateAnalysisCache();
      saveMonthlyClosing(month);
      o.className='status ok';o.textContent=`Fechamento ${month}: ${clean.length} registros processados. O fechamento foi salvo no histórico mensal.`;
    }else{
      const seen=new Set(salesRows.map(saleFingerprint)),clean=[];
      rows.forEach(x=>{const fp=saleFingerprint(x);if(!seen.has(fp)){seen.add(fp);clean.push(x)}});
      salesRows.push(...clean);
-     localStorage.setItem('okeo_sales_v32',JSON.stringify(salesRows));
+     localStorage.setItem('okeo_sales_v32',JSON.stringify(salesRows));invalidateAnalysisCache();
      o.className='status ok';o.textContent=`${clean.length} novos registros adicionados; ${rows.length-clean.length} duplicados foram ignorados.`;
    }
    refreshAllAnalyses();
@@ -768,6 +845,9 @@ document.getElementById('importSales').onclick=async()=>{
  }
 };
 function salesMetrics(unit='',from='',to=''){
+ const ck=fastCacheKey(['sales',unit,from,to]);
+ if(metricCache.has(ck))return metricCache.get(ck);
+ const result=(()=>{
  const rows=analysisSalesRows().filter(x=>{
    const d=String(x.datetime).slice(0,10),isCd=String(x.unit).toLowerCase().includes('cd - estoque central');
    const unitOk=!unit||unit===TOTAL_UNIT?!isCd:x.unit===unit;
@@ -776,6 +856,8 @@ function salesMetrics(unit='',from='',to=''){
  const revenue=rows.reduce((a,x)=>a+(Number(x.value)||0),0),unitsSold=rows.reduce((a,x)=>a+(Number(x.qty)||0),0),tickets=new Set(rows.map(x=>x.unit+'|'+normalizeDateTime(x.datetime))).size;
  let cmv=0;rows.forEach(x=>{const p=saleMasterProduct(x),e=p?p.ean:(x.ean||x.code);if(e)cmv+=(Number(x.qty)||0)*(Number(gs(x.unit,e).avgCost)||0)});
  return{rows,revenue,unitsSold,tickets,avg:tickets?revenue/tickets:0,cmv};
+})();
+ metricCache.set(ck,result);return result;
 }
 function renderSalesHistory(){const m=salesMetrics();document.getElementById('histRevenue').textContent=brl(m.revenue);document.getElementById('histTickets').textContent=m.tickets.toLocaleString('pt-BR');document.getElementById('histAvgTicket').textContent=brl(m.avg);document.getElementById('histUnits').textContent=m.unitsSold.toLocaleString('pt-BR');const by={};m.rows.forEach(x=>{const k=String(x.datetime).slice(0,7)||'Sem mês';if(!by[k])by[k]={r:0,t:new Set()};by[k].r+=Number(x.value)||0;by[k].t.add(x.unit+'|'+normalizeDateTime(x.datetime))});document.getElementById('salesByMonth').innerHTML=Object.entries(by).sort((a,b)=>b[0].localeCompare(a[0])).map(([k,v])=>`<div class="monthrow"><b>${k}</b><span>${brl(v.r)}</span><span>${v.t.size} tickets</span></div>`).join('')||'<small>Sem vendas importadas.</small>'}
 
@@ -973,14 +1055,16 @@ function currentStockFor(unit,ean){
  return Number(gs(unit,ean).qty)||0;
 }
 
-function salesForReplenishment(weeks,unit=''){
- const cutoff=cutoffDate(weeks), map={};
- salesRows.forEach(x=>{
-   const date=String(x.datetime).slice(0,10);
-   if(!date||date<cutoff)return;
-   if(unit&&unit!==TOTAL_UNIT&&x.unit!==unit)return;
-   let p=masterProduct(x.code);
-   let ean=p?p.ean:String(x.code||'').replace(/\D/g,'');
+function salesForReplenishment(weeks,unitFilter){
+ const endDate=new Date(HISTORY_END+'T23:59:59'),cut=new Date(endDate);cut.setDate(cut.getDate()-weeks*7+1);
+ const cutoff=`${cut.getFullYear()}-${String(cut.getMonth()+1).padStart(2,'0')}-${String(cut.getDate()).padStart(2,'0')}`;
+ const map={};
+ analysisSalesRows().forEach(x=>{
+   const date=saleDateKey(x.datetime);
+   if(!date||date<cutoff||date>HISTORY_END)return;
+   if(String(x.unit||'').toLowerCase().includes('cd - estoque central'))return;
+   if(unitFilter&&unitFilter!==TOTAL_UNIT&&x.unit!==unitFilter)return;
+   const p=saleMasterProduct(x),ean=norm(p?p.ean:(x.ean||x.code));
    if(!ean)return;
    const key=x.unit+'|'+ean;
    if(!map[key])map[key]={unit:x.unit,ean,product:(p?p.produto:x.product)||('EAN '+ean),weeks:{},total:0};
@@ -988,74 +1072,176 @@ function salesForReplenishment(weeks,unit=''){
    map[key].weeks[wk]=(map[key].weeks[wk]||0)+q;
    map[key].total+=q;
  });
- return Object.values(map);
+ return map;
+}
+function replenishmentUnits(unitFilter){
+ if(unitFilter&&unitFilter!==TOTAL_UNIT)return [unitFilter];
+ return allSalesUnits();
+}
+function replenishmentProductsForUnit(unit){
+ const uniq={};
+ PRODUCTS.forEach(p=>{
+   const e=norm(p.ean);if(!e)return;
+   if(p.condominio&&p.condominio!==unit)return;
+   if(!uniq[e])uniq[e]={ean:e,product:p.produto||('EAN '+e)};
+ });
+ // Produtos que existem no estoque ou histórico também entram mesmo que faltem na base mestre.
+ Object.keys(stockLedger).forEach(k=>{
+   const sep=k.indexOf('|');if(sep<0)return;
+   const u=k.slice(0,sep),e=k.slice(sep+1);if(u!==unit||!e||uniq[e])return;
+   const p=masterProduct(e);uniq[e]={ean:e,product:p?p.produto:('EAN '+e)};
+ });
+ return Object.values(uniq);
+}
+function replStatus(avg,min,ideal,current,groupStatus){
+ if(groupStatus)return groupStatus;
+ if(avg<=0)return 'SEM_GIRO';
+ if(current<=min)return 'REPOR';
+ if(current<ideal)return 'ATENCAO';
+ return 'OK';
 }
 function calculateReplenishment(){
- const weeks=Number(document.getElementById('replWeeks').value)||8,minFactor=Number(document.getElementById('replMinFactor').value)||1,maxFactor=Number(document.getElementById('replMaxFactor').value)||1.2,unit=document.getElementById('replUnit').value||'',supplier=document.getElementById('replSupplier').value||'';
- const base=salesForReplenishment(weeks,unit),byKey={};
- base.forEach(x=>byKey[x.unit+'|'+x.ean]=x);
+ const weeks=Number(document.getElementById('replWeeks').value)||16,
+       minFactor=Number(document.getElementById('replMinFactor').value)||1,
+       maxFactor=Number(document.getElementById('replMaxFactor').value)||1.2,
+       unitFilter=document.getElementById('replUnit').value||TOTAL_UNIT,
+       supplierFilter=document.getElementById('replSupplier').value||'';
 
- // Build pooled group demand per unit.
- const pools={};
- base.forEach(x=>{const g=demandGroupFor(x.ean);if(!g)return;const k=x.unit+'|'+g.id;if(!pools[k])pools[k]={total:0,weeks:{},members:[]};const p=pools[k];p.total+=x.total;p.members.push(x);Object.entries(x.weeks).forEach(([w,q])=>p.weeks[w]=(p.weeks[w]||0)+q)});
- const result=base.map(x=>{
-   const g=demandGroupFor(x.ean);let total=x.total,weeksObj=x.weeks,share=1;
-   if(g){
-     const pool=pools[x.unit+'|'+g.id];
-     if(pool){
-       total=pool.total;weeksObj=pool.weeks;
-       if(g.mode==='GROUP_DISTRIBUTED')share=pool.total>0?x.total/pool.total:1/Math.max(1,pool.members.length);
-       else share=1/Math.max(1,pool.members.length);
+ const salesMap=salesForReplenishment(weeks,unitFilter),unitsToRun=replenishmentUnits(unitFilter),rows=[];
+
+ unitsToRun.forEach(unit=>{
+   const products=replenishmentProductsForUnit(unit);
+   const members={};
+   products.forEach(p=>{
+     const sale=salesMap[unit+'|'+p.ean]||{unit,ean:p.ean,product:p.product,weeks:{},total:0};
+     members[p.ean]={...sale,product:p.product,current:currentStockFor(unit,p.ean),group:demandGroupFor(p.ean)};
+   });
+
+   // Garante membros de grupo presentes no histórico/estoque, mesmo se a lista mestre da unidade não os trouxe.
+   Object.values(salesMap).filter(x=>x.unit===unit).forEach(s=>{
+     if(!members[s.ean])members[s.ean]={...s,current:currentStockFor(unit,s.ean),group:demandGroupFor(s.ean)};
+   });
+
+   const grouped={},individual=[];
+   Object.values(members).forEach(m=>{
+     if(m.group){
+       const k=m.group.id;
+       if(!grouped[k])grouped[k]={group:m.group,members:[]};
+       grouped[k].members.push(m);
+     }else individual.push(m);
+   });
+
+   // Individuais
+   individual.forEach(m=>{
+     const vals=Object.values(m.weeks),activeWeeks=Math.max(1,weeks),avg=m.total/activeWeeks,peak=vals.length?Math.max(...vals):0;
+     const minStock=Math.ceil(avg*minFactor),ideal=Math.max(minStock,Math.ceil(peak*maxFactor));
+     const status=replStatus(avg,minStock,ideal,m.current,null),suggested=status==='REPOR'?Math.max(0,ideal-m.current):0;
+     rows.push({...m,avgWeekly:avg,peakWeekly:peak,minStock,maxStock:ideal,idealStock:ideal,suggested,status,
+       coverage:avg>0?m.current/avg:null,supplier:supplierFor(m.ean),demandGroup:'INDIVIDUAL',
+       groupCurrent:m.current,groupIdeal:ideal,groupPeak:peak,groupStatus:status});
+   });
+
+   // Agrupados: demanda e estoque avaliados no conjunto.
+   Object.values(grouped).forEach(gobj=>{
+     const ms=gobj.members,g=gobj.group,weekTotals={},groupTotal=ms.reduce((a,m)=>a+m.total,0);
+     ms.forEach(m=>Object.entries(m.weeks).forEach(([w,q])=>weekTotals[w]=(weekTotals[w]||0)+q));
+     const weekVals=Object.values(weekTotals),groupAvg=groupTotal/Math.max(1,weeks),groupPeak=weekVals.length?Math.max(...weekVals):0;
+     const groupMin=Math.ceil(groupAvg*minFactor),groupIdeal=Math.max(groupMin,Math.ceil(groupPeak*maxFactor));
+     const groupCurrent=ms.reduce((a,m)=>a+(Number(m.current)||0),0);
+     const groupStatus=groupAvg<=0?'SEM_GIRO':groupCurrent<=groupMin?'REPOR':groupCurrent<groupIdeal?'ATENCAO':'OK';
+     const groupNeed=groupStatus==='REPOR'?Math.max(0,groupIdeal-groupCurrent):0;
+
+     // Participação histórica. Se não houver vendas, divisão igual.
+     const shares=ms.map(m=>groupTotal>0?m.total/groupTotal:1/Math.max(1,ms.length));
+     // Alvo por SKU no estoque ideal do grupo.
+     const targets=shares.map(sh=>Math.round(groupIdeal*sh));
+     let diff=groupIdeal-targets.reduce((a,x)=>a+x,0);
+     for(let i=0;diff!==0&&i<targets.length*3;i++){
+       const j=i%targets.length;
+       if(diff>0){targets[j]++;diff--}else if(targets[j]>0){targets[j]--;diff++}
      }
-   }
-   const vals=Object.values(weeksObj),activeWeeks=Math.max(1,vals.length),groupAvg=total/activeWeeks,groupPeak=vals.length?Math.max(...vals):0;
-   const avgWeekly=groupAvg*share,peakWeekly=groupPeak*share,minStock=Math.ceil(avgWeekly*minFactor),maxStock=Math.max(minStock,Math.ceil(peakWeekly*maxFactor)),current=currentStockFor(x.unit,x.ean),supplierName=supplierFor(x.ean),alert=current<=minStock,suggested=alert?Math.max(0,maxStock-current):0,coverage=avgWeekly>0?current/avgWeekly:null;
-   return {...x,avgWeekly,peakWeekly,minStock,maxStock,current,supplier:supplierName,alert,suggested,coverage,demandGroup:g?g.name:'INDIVIDUAL'};
- }).filter(x=>!supplier||x.supplier===supplier);
- result.sort((a,b)=>(a.supplier||'').localeCompare(b.supplier||'')||a.unit.localeCompare(b.unit)||b.suggested-a.suggested||a.product.localeCompare(b.product));
+     let needs=ms.map((m,i)=>Math.max(0,targets[i]-(Number(m.current)||0)));
+     const needSum=needs.reduce((a,x)=>a+x,0);
+     if(groupNeed>0&&needSum>groupNeed){
+       // Limita a distribuição à necessidade real do grupo.
+       const raw=needs.map(n=>n/needSum*groupNeed),floors=raw.map(Math.floor);
+       let rem=groupNeed-floors.reduce((a,x)=>a+x,0);
+       const order=raw.map((v,i)=>({i,frac:v-Math.floor(v)})).sort((a,b)=>b.frac-a.frac);
+       for(let k=0;k<rem;k++)floors[order[k%order.length].i]++;
+       needs=floors;
+     }else if(groupNeed===0){
+       needs=needs.map(()=>0);
+     }
+
+     ms.forEach((m,i)=>{
+       const share=shares[i],avg=groupAvg*share,peak=groupPeak*share,minStock=Math.ceil(groupMin*share),ideal=targets[i];
+       rows.push({...m,avgWeekly:avg,peakWeekly:peak,minStock,maxStock:ideal,idealStock:ideal,suggested:needs[i]||0,status:groupStatus,
+         coverage:avg>0?m.current/avg:null,supplier:supplierFor(m.ean),demandGroup:g.name,
+         groupCurrent,groupIdeal,groupPeak,groupMin,groupStatus,groupShare:share});
+     });
+   });
+ });
+
+ const q=searchNorm(document.getElementById('replSearch')?.value||''),statusFilter=document.getElementById('replStatus')?.value||'';
+ const result=rows.filter(x=>{
+   if(supplierFilter&&x.supplier!==supplierFilter)return false;
+   if(statusFilter&&x.status!==statusFilter)return false;
+   if(q&&!searchNorm([x.product,x.ean,x.demandGroup,x.supplier].join(' ')).includes(q))return false;
+   return true;
+ });
+ const order={REPOR:0,ATENCAO:1,OK:2,SEM_GIRO:3};
+ result.sort((a,b)=>(order[a.status]??9)-(order[b.status]??9)||(a.supplier||'').localeCompare(b.supplier||'')||a.unit.localeCompare(b.unit)||a.demandGroup.localeCompare(b.demandGroup)||a.product.localeCompare(b.product));
  return result;
 }
 function refreshReplFilters(){
  fillAnalysisUnitSelect('replUnit');
- const sel=document.getElementById('replSupplier');
- const prev=sel.value;
+ const sel=document.getElementById('replSupplier'),prev=sel.value;
  const sups=['',...Array.from(new Set(Object.values(supplierMap).filter(Boolean))).sort()];
  sel.innerHTML=sups.map(x=>`<option value="${x}">${x||'Todos os fornecedores'}</option>`).join('');
  if(sups.includes(prev))sel.value=prev;
 }
+function replStatusLabel(s){return s==='REPOR'?'REPOR':s==='ATENCAO'?'ATENÇÃO':s==='SEM_GIRO'?'SEM GIRO':'OK'}
 function renderReplenishment(){
  refreshReplFilters();
- const data=calculateReplenishment();
- lastReplenishment=data;
- const alerts=data.filter(x=>x.alert&&x.suggested>0);
+ const data=calculateReplenishment();lastReplenishment=data;
+ const alerts=data.filter(x=>x.status==='REPOR'&&x.suggested>0);
  document.getElementById('replAlerts').textContent=alerts.length.toLocaleString('pt-BR');
  document.getElementById('replUnits').textContent=alerts.reduce((a,x)=>a+x.suggested,0).toLocaleString('pt-BR');
  document.getElementById('replNoSupplier').textContent=new Set(alerts.filter(x=>x.supplier==='SEM FORNECEDOR').map(x=>x.ean)).size.toLocaleString('pt-BR');
  document.getElementById('replSkus').textContent=data.length.toLocaleString('pt-BR');
 
  const groups={};
- alerts.forEach(x=>{
-   const g=x.supplier+'|||'+x.unit;
-   if(!groups[g])groups[g]=[];
-   groups[g].push(x);
- });
- const html=Object.entries(groups).map(([g,items])=>{
-   const [sup,unit]=g.split('|||');
-   const rows=items.map(x=>`<div class="replrow ${x.current===0?'critical':'alert'}"><div><b>${x.product}</b><br><small>${x.ean}<br>${x.coverage===null?'':x.coverage.toFixed(1).replace('.',',')+' sem. cobertura'}</small></div><div class="replnum">${x.avgWeekly.toFixed(1).replace('.',',')}<br><small>média</small></div><div class="replnum">${x.peakWeekly.toFixed(0)}<br><small>pico</small></div><div class="replnum">${x.current}<br><small>atual</small></div><div class="replnum"><b>${x.suggested}</b><br><small>repor</small></div></div>`).join('');
-   return `<div class="replgroup"><div class="replhead">${sup} • ${unit}</div><div class="replrow"><b>Produto</b><b class="replnum">Méd.</b><b class="replnum">Pico</b><b class="replnum">Atual</b><b class="replnum">Repor</b></div>${rows}</div>`;
+ data.forEach(x=>{const k=x.unit+'|||'+x.demandGroup;if(!groups[k])groups[k]=[];groups[k].push(x)});
+ const out=Object.entries(groups).map(([k,items])=>{
+   const [unit,gname]=k.split('|||'),sample=items[0],isGroup=gname!=='INDIVIDUAL';
+   const groupInfo=isGroup?`<div class="replGroupMetrics"><span>Estoque grupo <b>${sample.groupCurrent}</b></span><span>Ideal grupo <b>${sample.groupIdeal}</b></span><span>Pico grupo <b>${Number(sample.groupPeak||0).toFixed(0)}</b></span><span>Status <b class="replStatus ${sample.groupStatus}">${replStatusLabel(sample.groupStatus)}</b></span></div>`:'';
+   const rows=items.map(x=>`<div class="replFullRow ${x.status}">
+     <div><b>${x.product}</b><br><small>EAN ${x.ean}<br>${x.supplier||'SEM FORNECEDOR'}</small></div>
+     <div><b>${x.demandGroup}</b>${x.groupShare!=null?`<br><small>${(x.groupShare*100).toFixed(1).replace('.',',')}% do grupo</small>`:''}</div>
+     <div class="replnum">${x.avgWeekly.toFixed(1).replace('.',',')}<br><small>média/sem.</small></div>
+     <div class="replnum">${Number(x.peakWeekly||0).toFixed(1).replace('.',',')}<br><small>pico</small></div>
+     <div class="replnum">${x.minStock}<br><small>mínimo</small></div>
+     <div class="replnum">${x.current}<br><small>atual</small></div>
+     <div class="replnum"><b>${x.idealStock}</b><br><small>ideal</small></div>
+     <div class="replnum">${x.suggested?'<b>'+x.suggested+'</b>':'0'}<br><small>repor</small></div>
+     <div><span class="replStatus ${x.status}">${replStatusLabel(x.status)}</span>${x.coverage!==null?`<br><small>${x.coverage.toFixed(1).replace('.',',')} sem.</small>`:''}</div>
+   </div>`).join('');
+   return `<div class="replgroup"><div class="replhead">${unit} • ${gname}</div>${groupInfo}<div class="replFullRow replHeader"><b>Produto / EAN</b><b>Grupo</b><b>Média</b><b>Pico</b><b>Mín.</b><b>Atual</b><b>Ideal</b><b>Repor</b><b>Status</b></div>${rows}</div>`;
  }).join('');
- document.getElementById('replTable').innerHTML=html||'<small>Nenhum produto em alerta de reposição com os critérios atuais.</small>';
+ document.getElementById('replTable').innerHTML=out||'<small>Nenhum produto corresponde aos filtros atuais.</small>';
 }
-document.getElementById('refreshRepl').onclick=renderReplenishment;
-document.getElementById('replWeeks').onchange=renderReplenishment;
-document.getElementById('replMinFactor').onchange=renderReplenishment;
-document.getElementById('replMaxFactor').onchange=renderReplenishment;
-document.getElementById('replUnit').onchange=renderReplenishment;
-document.getElementById('replSupplier').onchange=renderReplenishment;
+document.getElementById('replStatus').onchange=()=>{delete renderCache.repl;renderReplenishmentFast()};
+document.getElementById('replSearch').oninput=debounce(()=>{delete renderCache.repl;renderReplenishmentFast()},160);
+document.getElementById('refreshRepl').onclick=()=>{delete renderCache.repl;renderReplenishmentFast()};
+document.getElementById('replWeeks').onchange=()=>{delete renderCache.repl;renderReplenishmentFast()};
+document.getElementById('replMinFactor').onchange=()=>{delete renderCache.repl;renderReplenishmentFast()};
+document.getElementById('replMaxFactor').onchange=()=>{delete renderCache.repl;renderReplenishmentFast()};
+document.getElementById('replUnit').onchange=()=>{delete renderCache.repl;renderReplenishmentFast()};
+document.getElementById('replSupplier').onchange=()=>{delete renderCache.repl;renderReplenishmentFast()};
 
 function replenishmentCsv(){
- const rows=[['Fornecedor','Condomínio','Grupo de demanda','EAN','Produto','Venda média semanal','Pico semanal','Estoque mínimo','Estoque máximo','Estoque atual','Cobertura semanas','Quantidade a repor']];
- lastReplenishment.filter(x=>x.alert&&x.suggested>0).forEach(x=>rows.push([x.supplier,x.unit,x.demandGroup||'INDIVIDUAL',x.ean,x.product,x.avgWeekly.toFixed(2),x.peakWeekly,x.minStock,x.maxStock,x.current,x.coverage===null?'':x.coverage.toFixed(2),x.suggested]));
+ const rows=[['Fornecedor','Condomínio','Grupo de demanda','EAN','Produto','Venda média semanal','Pico mensurado','Estoque mínimo','Estoque atual','Estoque ideal','Cobertura semanas','Status','Quantidade a repor']];
+ lastReplenishment.filter(x=>x.alert&&x.suggested>0).forEach(x=>rows.push([x.supplier,x.unit,x.demandGroup||'INDIVIDUAL',x.ean,x.product,x.avgWeekly.toFixed(2),x.peakWeekly.toFixed(2),x.minStock,x.current,x.idealStock,x.coverage===null?'':x.coverage.toFixed(2),replStatusLabel(x.status),x.suggested]));
  let esc=s=>'"'+String(s??'').replaceAll('"','""')+'"';
  return '\ufeff'+rows.map(r=>r.map(esc).join(';')).join('\r\n');
 }
@@ -1231,7 +1417,7 @@ async function syncFromApi(){
        const fp=saleFingerprint(x);
        if(!seen.has(fp)){seen.add(fp);salesRows.push(x);result.sales++}
      });
-     localStorage.setItem('okeo_sales_v32',JSON.stringify(salesRows));
+     localStorage.setItem('okeo_sales_v32',JSON.stringify(salesRows));invalidateAnalysisCache();
    }
  }catch(e){}
 
