@@ -1,0 +1,22 @@
+OKEO GESTÃO V7.0.1 FLAT
+
+Correção para o repositório GitHub atual.
+
+Todos os arquivos da V7 ficam diretamente na raiz do repositório.
+Não são necessárias pastas /assets, /js ou /modules.
+
+IMPORTANTE
+- Pode manter os arquivos antigos do repositório por enquanto.
+- Basta enviar/substituir os arquivos deste ZIP na raiz.
+- O index.html desta versão aponta para:
+  okeo-logo.png
+  icon-v7.png
+  app-v7.js
+  e os módulos module-*.js
+- A Base Central V4.0 já publicada continua correta.
+- Não é necessário alterar o Apps Script novamente.
+
+TESTE APÓS UPLOAD
+1. Abra .../app-v7.js -> deve mostrar JavaScript, não 404.
+2. Abra .../okeo-logo.png -> deve mostrar a logo.
+3. Abra o sistema em janela anônima.

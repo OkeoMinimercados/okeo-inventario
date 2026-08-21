@@ -6,13 +6,13 @@
 <meta name="theme-color" content="#22784d">
 <title>OKEO Gestão V7</title>
 <link rel="manifest" href="./manifest.webmanifest">
-<link rel="icon" href="./assets/icon.png">
+<link rel="icon" href="./icon-v7.png">
 <link rel="stylesheet" href="./styles.css">
 </head>
 <body>
 <div id="loginScreen" class="login-screen">
   <form id="loginForm" class="login-card">
-    <div class="brand"><img src="./assets/okeo-logo.png" alt="OKEO"><div><h1>OKEO Gestão</h1><small>V7.0.0 Clean Architecture</small></div></div>
+    <div class="brand"><img src="./okeo-logo.png" alt="OKEO"><div><h1>OKEO Gestão</h1><small>V7.0.1 Clean Architecture</small></div></div>
     <p>Acesso ao sistema</p>
     <label>Usuário</label><input id="loginUser" autocomplete="username" required>
     <label>Senha</label><input id="loginPass" type="password" autocomplete="current-password" required>
@@ -25,7 +25,7 @@
 <div id="app" class="app hidden">
   <header class="topbar">
     <button id="menuToggle" class="icon-btn mobile-only" aria-label="Menu">☰</button>
-    <div class="brand mini"><img src="./assets/okeo-logo.png" alt=""><b>OKEO Gestão</b><small>V7</small></div>
+    <div class="brand mini"><img src="./okeo-logo.png" alt=""><b>OKEO Gestão</b><small>V7</small></div>
     <div class="top-status"><span id="onlineBadge">Online</span><span id="moduleStatus"></span></div>
     <div class="userbox"><span id="userName"></span><button id="logoutBtn" class="ghost">Sair</button></div>
   </header>
@@ -45,6 +45,6 @@
   </div>
 </div>
 
-<script type="module" src="./js/app.js"></script>
+<script type="module" src="./app-v7.js"></script>
 </body>
 </html>

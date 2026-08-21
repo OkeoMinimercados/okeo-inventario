@@ -1,0 +1,3 @@
+
+import {get,brl,errorBox} from './module-common.js';
+export async function mount(root){try{const r=await get('analytics_monthly',{unit:'OKEO Consolidado'},{ttl:600000});root.innerHTML=`<div class="card"><div class="table-wrap"><table class="table"><thead><tr><th>Mês</th><th>Unidade</th><th>Faturamento</th><th>Tickets</th><th>Ticket médio</th><th>CMV</th><th>Margem</th></tr></thead><tbody>${(r.rows||[]).map(x=>`<tr><td>${x.month}</td><td>${x.unit}</td><td>${brl(x.revenue)}</td><td>${x.tickets}</td><td>${brl(x.avgTicket)}</td><td>${brl(x.cmv)}</td><td>${brl((+x.revenue||0)-(+x.cmv||0))}</td></tr>`).join('')}</tbody></table></div></div>`}catch(e){root.innerHTML=errorBox(e)}}

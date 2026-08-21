@@ -1,4 +1,4 @@
-const CACHE='okeo-v7-shell-1';const SHELL=['./','./index.html','./styles.css','./js/app.js','./js/auth.js','./js/api.js','./js/db.js','./js/registry.js','./js/util.js','./assets/okeo-logo.png','./assets/icon.png'];
+const CACHE='okeo-v7-shell-1-flat';const SHELL=['./','./index.html','./styles.css','./app-v7.js','./auth-v7.js','./api-v7.js','./db-v7.js','./registry-v7.js','./util-v7.js','./okeo-logo.png','./icon-v7.png'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(SHELL)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==CACHE).map(x=>caches.delete(x)))).then(()=>self.clients.claim())));
 self.addEventListener('fetch',e=>{const r=e.request;if(r.method!=='GET')return;const u=new URL(r.url);if(u.origin!==location.origin)return;if(r.mode==='navigate'){e.respondWith(fetch(r,{cache:'no-store'}).catch(()=>caches.match('./index.html')));return}e.respondWith(caches.match(r).then(c=>c||fetch(r).then(x=>{if(x.ok)caches.open(CACHE).then(cc=>cc.put(r,x.clone()));return x})))});

@@ -1,0 +1,3 @@
+
+import {get,errorBox,esc} from './module-common.js';
+export async function mount(root){try{const r=await get('analytics_time',{weeks:12,unit:'OKEO Consolidado'},{ttl:300000});const map={};(r.rows||[]).forEach(x=>{const k=`${x.dow}|${x.bucket}`;map[k]=(map[k]||0)+(+x.qty||0)});root.innerHTML=`<div class="card"><div class="table-wrap"><table class="table"><thead><tr><th>Dia</th><th>Faixa</th><th>Qtd.</th></tr></thead><tbody>${Object.entries(map).sort((a,b)=>b[1]-a[1]).map(([k,v])=>{const [d,h]=k.split('|');return`<tr><td>${d}</td><td>${esc(h)}</td><td>${v}</td></tr>`}).join('')}</tbody></table></div></div>`}catch(e){root.innerHTML=errorBox(e)}}

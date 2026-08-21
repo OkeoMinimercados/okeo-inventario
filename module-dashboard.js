@@ -1,0 +1,3 @@
+
+import {get,brl,skeleton,errorBox} from './module-common.js';import {calc} from './worker-client-v7.js';
+export async function mount(root){root.innerHTML=skeleton(7);try{const [m,s]=await Promise.all([get('analytics_monthly',{unit:'OKEO Consolidado'},{ttl:600000}),get('v7_stock_page',{page:1,pageSize:5000},{ttl:120000})]);const k=await calc('kpis',{monthly:m.rows||[],stock:s.rows||[]});root.innerHTML=`<div class="kpis">${[['Faturamento',brl(k.revenue)],['Margem',brl(k.margin)],['Ticket médio',brl(k.avgTicket)],['Estoque',brl(k.stockValue)],['Giro',k.turnover.toFixed(2)]].map(x=>`<div class="kpi"><small>${x[0]}</small><b>${x[1]}</b></div>`).join('')}</div>`}catch(e){root.innerHTML=errorBox(e)}}
