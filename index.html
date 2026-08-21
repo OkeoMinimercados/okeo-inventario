@@ -135,7 +135,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
 .moduleAsyncStatus{padding:4px 8px;border-radius:999px;font-size:10px;font-weight:800;background:#eaf3ff;color:#2a5f91}
 .appTab{contain:layout style;content-visibility:auto;contain-intrinsic-size:700px}
 .moduleCard{transform:translateZ(0);will-change:auto}
-</style>
+#moduleLoading{pointer-events:none!important}.appTab{transition:none!important}.moduleCard{touch-action:manipulation}</style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.4/dist/jspdf.plugin.autotable.min.js"></script>
@@ -146,7 +146,7 @@ button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid 
     <div class="muted">Acesso ao sistema</div>
     <label>Usuário</label><input id="loginUser" autocomplete="username">
     <label>Senha</label><input id="loginPass" type="password" autocomplete="current-password">
-    <button class="green" id="loginBtn" type="button" onclick="return okeoDirectLogin(event)">Entrar</button><div class="loginHealth"><span id="loginJsStatus">JavaScript: iniciando...</span><span id="loginBackendStatus">Base Central: verificando...</span></div><div class="loginVersion">OKEO Gestão V6.2.0</div>
+    <button class="green" id="loginBtn" type="button" onclick="return okeoDirectLogin(event)">Entrar</button><div class="loginHealth"><span id="loginJsStatus">JavaScript: iniciando...</span><span id="loginBackendStatus">Base Central: verificando...</span></div><div class="loginVersion">OKEO Gestão V6.3.0</div>
     <div id="loginMsg" class="status"></div>
   </div>
 </div>
