@@ -8,3 +8,6 @@
 
 .legacy-container{height:calc(100vh - 58px);background:#f4f6f7}
 .legacy-container iframe{width:100%;height:100%;border:0;background:#f4f6f7}
+
+.legacy-container{position:relative}
+.legacy-container:before{content:'';position:absolute;inset:0;pointer-events:none;border-top:1px solid #e1e6e9}

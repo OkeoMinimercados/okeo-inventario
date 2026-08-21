@@ -5,7 +5,16 @@ import {cancel as cancelWorker} from './worker-client-v7.js';
 
 const $=s=>document.querySelector(s);
 const state={user:null,module:null,navGeneration:0,moduleInstances:new Map()};
-function allowed(m){return state.user?.role==='ADMIN'||m.role==='OPERATIONAL'&&state.user?.role==='OPERATIONAL'}
+function normRole(r){
+  const x=String(r||'').trim().toUpperCase();
+  if(['ADMIN','ADMINISTRADOR','ADMINISTRATOR','OWNER','PROPRIETARIO','PROPRIETÁRIO'].includes(x))return 'ADMIN';
+  if(['OPERATIONAL','OPERACIONAL','OPERATOR','OPERADOR'].includes(x))return 'OPERATIONAL';
+  return x||'ADMIN';
+}
+function allowed(m){
+  const r=normRole(state.user?.role);
+  return r==='ADMIN'||(m.role==='OPERATIONAL'&&r==='OPERATIONAL');
+}
 function buildNav(){
  $('#nav').innerHTML=MODULES.filter(allowed).map(m=>`<button class="nav-btn" data-id="${m.id}"><span class="ico">${m.icon}</span><span><b>${m.title}</b><small>${m.desc}</small></span></button>`).join('');
  $('#nav').onclick=e=>{const b=e.target.closest('.nav-btn');if(b)navigate(b.dataset.id)};
@@ -16,11 +25,23 @@ function openLegacy(id){
  const target=LEGACY_MAP[id];if(!target)return false;
  const root=document.querySelector('#moduleRoot'),box=document.querySelector('#legacyContainer'),frame=document.querySelector('#legacyFrame');
  root.classList.add('hidden');box.classList.remove('hidden');
+
+ const payload={
+   type:'OKEO_V7_AUTH_ROUTE',
+   module:target,
+   token:localStorage.getItem('okeo_v7_token')||localStorage.getItem('okeo_auth_token_v39')||'',
+   user:state.user||{}
+ };
+
  if(!legacyReady){
    legacyReady=true;
+   frame.onload=()=>{
+     try{frame.contentWindow.postMessage(payload,'*')}catch(e){}
+   };
    frame.src='./legacy-v6.html#'+target;
  }else{
-   try{frame.contentWindow.postMessage({type:'OKEO_V7_ROUTE',module:target},'*')}catch(e){frame.src='./legacy-v6.html#'+target}
+   try{frame.contentWindow.postMessage(payload,'*')}
+   catch(e){frame.src='./legacy-v6.html#'+target}
  }
  return true;
 }
@@ -28,6 +49,22 @@ function closeLegacy(){
  document.querySelector('#legacyContainer').classList.add('hidden');
  document.querySelector('#moduleRoot').classList.remove('hidden');
 }
+
+window.addEventListener('message',e=>{
+ if(e.data&&e.data.type==='OKEO_LEGACY_READY'&&state.module){
+   const target=LEGACY_MAP[state.module];
+   if(target){
+     try{
+       document.querySelector('#legacyFrame').contentWindow.postMessage({
+         type:'OKEO_V7_AUTH_ROUTE',
+         module:target,
+         token:localStorage.getItem('okeo_v7_token')||localStorage.getItem('okeo_auth_token_v39')||'',
+         user:state.user||{}
+       },'*');
+     }catch(_){}
+   }
+ }
+});
 async function navigate(id){
  const m=MODULES.find(x=>x.id===id);if(!m||!allowed(m))return;
  state.navGeneration++;const gen=state.navGeneration;state.module=id;cancelWorker();
@@ -56,7 +93,7 @@ async function navigate(id){
  }));
 }
 async function enter(user){
- state.user=user;$('#loginScreen').classList.add('hidden');$('#app').classList.remove('hidden');$('#userName').textContent=user.name||user.username||'';buildNav();
+ state.user={...(user||{}),role:normRole(user?.role)};$('#loginScreen').classList.add('hidden');$('#app').classList.remove('hidden');$('#userName').textContent=user.name||user.username||'';buildNav();
  const target=location.hash.slice(1);const first=MODULES.find(m=>allowed(m))?.id;
  navigate(MODULES.some(m=>m.id===target&&allowed(m))?target:first);
 }

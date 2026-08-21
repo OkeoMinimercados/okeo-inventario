@@ -1,0 +1,17 @@
+OKEO GESTÃO V7.1.1 FULL FIX
+
+CORREÇÃO PRINCIPAL
+- Corrigida a comunicação entre o shell V7 e os módulos completos herdados da V6.
+- Token, usuário e perfil são enviados diretamente para a camada de compatibilidade.
+- Perfil ADMIN/ADMINISTRADOR é normalizado.
+- Todos os módulos administrativos deixam de depender da reconstrução de sessão dentro do iframe.
+- Ao clicar em qualquer módulo, a V7 força a rota correta na camada completa.
+- Inventário, NF, relatórios, DRE, ABC, Reposição, Gestão, etc. usam novamente as funções completas.
+
+BASE CENTRAL
+- Manter V4.0.
+- Não precisa alterar Apps Script.
+
+INSTALAÇÃO
+- Substituir/adicionar os arquivos deste ZIP na raiz do GitHub.
+- Testar em janela anônima para evitar Service Worker antigo.

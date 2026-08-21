@@ -2003,3 +2003,60 @@ window.addEventListener('message',e=>{
  }
 });
 setTimeout(v7CompatRoute,300);
+
+
+// ===== V7.1.1 STRONG AUTH / ROUTE BRIDGE =====
+function v711NormRole(r){
+ const x=String(r||'').trim().toUpperCase();
+ if(['ADMIN','ADMINISTRADOR','ADMINISTRATOR','OWNER','PROPRIETARIO','PROPRIETÁRIO'].includes(x))return 'ADMIN';
+ if(['OPERATIONAL','OPERACIONAL','OPERATOR','OPERADOR'].includes(x))return 'OPERATIONAL';
+ return x||'ADMIN';
+}
+function v711ApplyAuthRoute(data){
+ try{
+   if(data.token){
+     localStorage.setItem('okeo_auth_token_v39',data.token);
+     localStorage.setItem('okeo_session_confirmed_v435','1');
+   }
+   const u={...(data.user||{})};
+   u.role=v711NormRole(u.role);
+   if(!u.username)u.username=u.name||'admin';
+   authState={token:data.token||localStorage.getItem('okeo_auth_token_v39')||'',user:u};
+   localStorage.setItem('okeo_auth_user_v434',JSON.stringify(u));
+   window.__OKEO_AUTH_READY=true;
+   window.__OKEO_LOGIN_ACTIVE=false;
+
+   const overlay=document.getElementById('loginOverlay');
+   if(overlay)overlay.style.display='none';
+
+   try{applyRoleUI()}catch(e){}
+   try{setAnalysisDefaults()}catch(e){}
+
+   const target=String(data.module||location.hash.slice(1)||'inventario');
+   setTimeout(()=>{
+     try{
+       const el=document.getElementById('tab-'+target);
+       if(el){
+         // Force tab visibility first, then invoke normal renderer.
+         document.querySelectorAll('.appTab').forEach(x=>x.style.display='none');
+         el.style.display='block';
+       }
+       showTab(target);
+     }catch(e){
+       console.warn('V7 route',target,e);
+       try{
+         document.querySelectorAll('.appTab').forEach(x=>x.style.display='none');
+         const el=document.getElementById('tab-'+target);if(el)el.style.display='block';
+       }catch(_){}
+     }
+   },20);
+ }catch(e){console.warn('V7 auth bridge',e)}
+}
+window.addEventListener('message',e=>{
+ if(e.data&&e.data.type==='OKEO_V7_AUTH_ROUTE')v711ApplyAuthRoute(e.data);
+});
+try{
+ if(window.parent&&window.parent!==window){
+   window.parent.postMessage({type:'OKEO_LEGACY_READY'},'*');
+ }
+}catch(e){}
