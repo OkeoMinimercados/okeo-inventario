@@ -34,7 +34,7 @@ main{max-width:1180px!important}
 .moduleIcon.navy{background:#21456f}.moduleIcon.emerald{background:#168a62}
 .moduleIcon.violet{background:#7153c6;font-size:14px}.moduleIcon.lime{background:#6cad2d}
 .moduleIcon.sky{background:#298fc2}.moduleIcon.gold{background:#c99718}
-.moduleIcon.graphite{background:#4c5966}
+.moduleIcon.graphite{background:#4c5966}.moduleIcon.healthIcon{background:#198754}
 .consolidatedCard{margin-top:18px;background:#fff;border:1px solid #dce6df;border-radius:16px;box-shadow:0 4px 16px #0000000a;overflow:hidden}
 .consolidatedTitle{padding:15px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #edf0f2}
 .consolidatedTitle b{display:block;font-size:18px}
@@ -77,6 +77,23 @@ main{max-width:1180px!important}
 
 .storagePolicy{margin-bottom:14px}.storageGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:10px}.storageGrid>div{padding:10px;border:1px solid #e1e7eb;border-radius:10px;background:#fafcfd}.storageGrid strong{display:block;font-size:12px}.storageGrid small{display:block;margin-top:4px;color:#65717d}
 @media(max-width:800px){.storageGrid{grid-template-columns:1fr 1fr}}@media(max-width:500px){.storageGrid{grid-template-columns:1fr}}
+
+.loginVersion{text-align:center;margin-top:8px;font-size:10px;color:#8a959e}
+
+.healthTitleRow{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.healthGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
+.healthGrid>div{padding:12px;border:1px solid #e3e8ec;border-radius:10px;background:#fafcfd}
+.healthGrid small,.healthGrid b{display:block}.healthGrid b{margin-top:5px;font-size:15px}
+.healthPill{display:inline-block;padding:5px 9px;border-radius:999px;font-size:10px;font-weight:900;white-space:nowrap}
+.healthPill.ok{background:#dff4e7;color:#216b43}.healthPill.warn,.healthPill.bad{background:#ffe2df;color:#9e302a}.healthPill.unknown{background:#edf0f2;color:#64717c}
+.healthModuleRow{display:flex;justify-content:space-between;gap:12px;align-items:center;padding:10px 5px;border-top:1px solid #e7ebee}
+.diagError{padding:11px 4px;border-top:1px solid #e7ebee}.diagError small{display:block;color:#6a7782;margin:3px 0 6px}.diagError pre{white-space:pre-wrap;max-height:130px;overflow:auto;background:#f5f7f8;padding:7px;border-radius:7px;font-size:10px}
+.healthEmpty{padding:15px;color:#697781}.moduleIcon.healthIcon{background:#168757}
+@media(max-width:700px){.healthGrid{grid-template-columns:1fr 1fr}}
+
+.loginHealth{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:8px}
+.loginCheck{font-size:10px;padding:3px 7px;border-radius:999px;background:#edf0f2;color:#6b7780}
+.loginCheck.ok{background:#e3f4e9;color:#246c45}.loginCheck.bad{background:#ffe3e0;color:#a3342e}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
@@ -88,10 +105,12 @@ main{max-width:1180px!important}
     <div class="muted">Acesso ao sistema</div>
     <label>Usuário</label><input id="loginUser" autocomplete="username">
     <label>Senha</label><input id="loginPass" type="password" autocomplete="current-password">
-    <button class="green" id="loginBtn">Entrar</button>
+    <button class="green" id="loginBtn" type="button" onclick="return okeoDirectLogin(event)">Entrar</button><div class="loginHealth"><span id="loginJsStatus">JavaScript: iniciando...</span><span id="loginBackendStatus">Base Central: verificando...</span></div><div class="loginVersion">OKEO Gestão V4.3.4</div>
     <div id="loginMsg" class="status"></div>
   </div>
 </div>
+
+
 <header><span class="headerBrand"><span class="brandLogoMini"><img src="okeo-logo.png" alt="OKEO"></span> OKEO • Gestão</span> <span id="net" class="pill">online</span></header><main>
 <div id="moduleLoading" class="moduleLoading" style="display:none"><span class="loadingDot"></span> Atualizando informações...</div>
 <div id="homeTop" class="homeHero card">
@@ -143,6 +162,11 @@ main{max-width:1180px!important}
     <button class="moduleCard" data-module="horarios" data-min-role="ADMIN" onclick="showTab('horarios')"><span class="moduleIcon sky">🕒</span><span><b>Dias / Horários</b><small>Picos de demanda</small></span></button>
     <button class="moduleCard" data-module="fiscal" data-min-role="ADMIN" onclick="showTab('fiscal')"><span class="moduleIcon gold">🧾</span><span><b>Cadastro Fiscal SC</b><small>NCM, CEST e validação</small></span></button>
     <button class="moduleCard" data-module="acessos" data-min-role="ADMIN" onclick="showTab('acessos')"><span class="moduleIcon graphite">👤</span><span><b>Controle de Acesso</b><small>Usuários e permissões</small></span></button>
+
+    <button class="moduleCard" data-module="diagnostico" data-min-role="ADMIN" onclick="showTab('diagnostico')">
+      <span class="moduleIcon healthIcon">🩺</span>
+      <span><b>Saúde do Sistema</b><small id="healthCardStatus">Monitoramento e diagnóstico</small></span>
+    </button>
 </div>
 
   <div class="consolidatedCard">
@@ -155,6 +179,41 @@ main{max-width:1180px!important}
       <div><small>MARGEM (MÊS)</small><b id="homeConsolMargin">0,0%</b><span>Só condomínios</span></div>
     </div>
     <div class="consolidatedNote">Estoque consolidado: CD + todos os condomínios • Vendas, faturamento, ticket, CMV, DRE e Curva ABC: somente condomínios.</div>
+  </div>
+</div>
+
+
+<div id="tab-diagnostico" class="appTab" style="display:none">
+  <div class="card">
+    <div class="healthTitleRow">
+      <div>
+        <b>Saúde do Sistema</b>
+        <div class="muted">Monitora erros do navegador, falhas de módulos e problemas de comunicação.</div>
+      </div>
+      <span id="healthOverall" class="healthPill ok">Tudo OK</span>
+    </div>
+    <div class="healthGrid">
+      <div><small>Versão</small><b id="diagVersion">V4.3.3</b></div>
+      <div><small>Erros nesta sessão</small><b id="diagSessionErrors">0</b></div>
+      <div><small>Erros armazenados</small><b id="diagStoredErrors">0</b></div>
+      <div><small>Último erro</small><b id="diagLastError">Nenhum</b></div>
+    </div>
+    <div class="actions">
+      <button class="gray" id="diagRefresh">Atualizar diagnóstico</button>
+      <button class="gray" id="diagDownload">Baixar diagnóstico</button>
+      <button class="red" id="diagClear">Limpar erros</button>
+    </div>
+    <div class="muted">O diagnóstico não registra senha. Tokens e credenciais são mascarados antes de exportar.</div>
+  </div>
+
+  <div class="card">
+    <b>Status dos módulos</b>
+    <div id="moduleHealthList"></div>
+  </div>
+
+  <div class="card">
+    <b>Erros recentes</b>
+    <div id="diagnosticErrors"></div>
   </div>
 </div>
 
@@ -640,7 +699,7 @@ async function startOcrCamera(){
 async function captureExpiryDate(){const ov=document.getElementById('ocrVideo'),canvas=document.getElementById('ocrCanvas'),om=document.getElementById('ocrMsg');if(!ocrStream){om.className='status warn';om.textContent='Abra a câmera primeiro.';return}canvas.width=ov.videoWidth||1280;canvas.height=ov.videoHeight||720;canvas.getContext('2d').drawImage(ov,0,0,canvas.width,canvas.height);if(!('TextDetector'in window)){om.className='status warn';om.textContent='OCR automático não disponível neste navegador. Digite a data observada na embalagem.';return}try{const td=new TextDetector(),blocks=await td.detect(canvas),text=blocks.map(b=>b.rawValue||'').join(' '),found=parseDateFromText(text);if(found){document.getElementById('expiryDate').value=found;om.className='status ok';om.textContent='Data encontrada: '+found.split('-').reverse().join('/')+'. Confirme antes de salvar.';if(navigator.vibrate)navigator.vibrate(80)}else{om.className='status warn';om.textContent='Não encontrei uma data legível. Ajuste a câmera ou digite manualmente.'}}catch(e){om.className='status warn';om.textContent='Não foi possível reconhecer a data. Digite manualmente.'}}
 function stopOcrCamera(){try{if(ocrStream)ocrStream.getTracks().forEach(t=>t.stop())}catch(e){}ocrStream=null;const ov=document.getElementById('ocrVideo');if(ov){try{ov.pause()}catch(e){}ov.srcObject=null}const box=document.getElementById('ocrBox');if(box)box.classList.remove('open')}
 function save(){localStorage.setItem('okeo_inventory_pwa',JSON.stringify({condo:condo.value,counts}))}function restore(){try{let x=JSON.parse(localStorage.getItem('okeo_inventory_pwa'));if(x){condo.value=x.condo||'';counts=x.counts||{}}Object.values(counts).forEach(v=>{if(!v.expiries)v.expiries=[]})}catch(e){}render()}function csvText(){let rows=[['Data','Condomínio','EAN','Produto','Fabricante','Categoria','Quantidade','Validade','Dias para vencer','Status validade']];Object.values(counts).filter(v=>v.qty>0).forEach(v=>{const lots=(v.expiries||[]).filter(x=>(Number(x.qty)||0)>0);let assigned=0;lots.forEach(x=>{const q=Number(x.qty)||0;assigned+=q;const d=x.date?daysUntil(x.date):'',st=x.date?(d<0?'VENCIDO':d<=7?'ATÉ 7 DIAS':d<=15?'ATÉ 15 DIAS':d<=30?'ATÉ 30 DIAS':d<=60?'ATÉ 60 DIAS':'OK'):'';rows.push([new Date().toLocaleString('pt-BR'),v.condominio,v.ean,v.produto,v.fabricante||'',v.categoria||'',q,x.date?x.date.split('-').reverse().join('/'):'',d,st])});const rem=Math.max(0,v.qty-assigned);if(rem>0||!lots.length)rows.push([new Date().toLocaleString('pt-BR'),v.condominio,v.ean,v.produto,v.fabricante||'',v.categoria||'',rem||v.qty,'','','SEM VALIDADE INFORMADA'])});let esc=s=>'"'+String(s).replaceAll('"','""')+'"';return '\ufeff'+rows.map(r=>r.map(esc).join(';')).join('\r\n')}
-function filename(){return 'Inventario_'+(condo.value||'Sem_Condominio').replace(/\W+/g,'_')+'_'+new Date().toISOString().slice(0,10)+'.csv'}function exportCSV(){if(!condo.value){alert('Selecione o condomínio.');return}let b=new Blob([csvText()],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=filename();a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}async function startCamera(){if(!condo.value){msg.className='status warn';msg.textContent='Selecione o condomínio antes de usar a câmera.';return}if(!('BarcodeDetector'in window)){msg.className='status warn';msg.textContent='Leitura nativa não suportada neste navegador. Use Chrome/Edge atualizado ou leitor Bluetooth/USB.';return}try{detector=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128']});stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false});video.srcObject=stream;await video.play();document.getElementById('readerWrap').style.display='block';scanning=true;cameraBtn.disabled=true;stopCameraBtn.disabled=false;scanLoop()}catch(e){msg.className='status warn';msg.textContent='Não foi possível abrir a câmera. Verifique a permissão.'}}async function scanLoop(){if(!scanning||!detector)return;try{const codes=await detector.detect(video);if(codes.length){const raw=codes[0].rawValue||'',now=Date.now();if(raw&&(raw!==lastCode||now-lastAt>1500)){lastCode=raw;lastAt=now;addCode(raw)}}}catch(e){}requestAnimationFrame(scanLoop)}function stopCamera(){scanning=false;try{if(stream)stream.getTracks().forEach(t=>t.stop())}catch(e){}stream=null;try{video.pause();video.srcObject=null}catch(e){}document.getElementById('readerWrap').style.display='none';cameraBtn.disabled=false;stopCameraBtn.disabled=true}function updateOnline(){document.getElementById('net').textContent=navigator.onLine?'online':'offline'}document.getElementById('add').onclick=()=>addCode(ean.value);ean.addEventListener('keydown',e=>{if(e.key==='Enter')addCode(ean.value)});document.getElementById('search').oninput=render;document.getElementById('csv').onclick=exportCSV;document.getElementById('backup').onclick=()=>{save();alert('Backup salvo neste aparelho.')};document.getElementById('clear').onclick=()=>{if(confirm('Zerar toda a contagem atual?')){counts={};save();render()}};condo.onchange=()=>{save();ean.focus()};cameraBtn.onclick=startCamera;stopCameraBtn.onclick=stopCamera;document.getElementById('saveExpiry').onclick=saveExpiry;document.getElementById('closeExpiry').onclick=closeExpiry;document.getElementById('ocrBtn').onclick=startOcrCamera;document.getElementById('captureExpiry').onclick=captureExpiryDate;document.getElementById('stopOcr').onclick=stopOcrCamera;window.addEventListener('online',updateOnline);window.addEventListener('offline',updateOnline);updateOnline();restore();ean.focus();
+function filename(){return 'Inventario_'+(condo.value||'Sem_Condominio').replace(/\W+/g,'_')+'_'+new Date().toISOString().slice(0,10)+'.csv'}function exportCSV(){if(!condo.value){alert('Selecione o condomínio.');return}let b=new Blob([csvText()],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=filename();a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}async function startCamera(){if(!condo.value){msg.className='status warn';msg.textContent='Selecione o condomínio antes de usar a câmera.';return}if(!('BarcodeDetector'in window)){msg.className='status warn';msg.textContent='Leitura nativa não suportada neste navegador. Use Chrome/Edge atualizado ou leitor Bluetooth/USB.';return}try{detector=new BarcodeDetector({formats:['ean_13','ean_8','upc_a','upc_e','code_128']});stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false});video.srcObject=stream;await video.play();document.getElementById('readerWrap').style.display='block';scanning=true;cameraBtn.disabled=true;stopCameraBtn.disabled=false;scanLoop()}catch(e){msg.className='status warn';msg.textContent='Não foi possível abrir a câmera. Verifique a permissão.'}}async function scanLoop(){if(!scanning||!detector)return;try{const codes=await detector.detect(video);if(codes.length){const raw=codes[0].rawValue||'',now=Date.now();if(raw&&(raw!==lastCode||now-lastAt>1500)){lastCode=raw;lastAt=now;addCode(raw)}}}catch(e){}requestAnimationFrame(scanLoop)}function stopCamera(){scanning=false;try{if(stream)stream.getTracks().forEach(t=>t.stop())}catch(e){}stream=null;try{video.pause();video.srcObject=null}catch(e){}document.getElementById('readerWrap').style.display='none';cameraBtn.disabled=false;stopCameraBtn.disabled=true}function updateOnline(){document.getElementById('net').textContent=navigator.onLine?'online':'offline'}(document.getElementById('add')||{}).onclick=()=>addCode(ean.value);ean.addEventListener('keydown',e=>{if(e.key==='Enter')addCode(ean.value)});(document.getElementById('search')||{}).oninput=render;(document.getElementById('csv')||{}).onclick=exportCSV;(document.getElementById('backup')||{}).onclick=()=>{save();alert('Backup salvo neste aparelho.')};(document.getElementById('clear')||{}).onclick=()=>{if(confirm('Zerar toda a contagem atual?')){counts={};save();render()}};condo.onchange=()=>{save();ean.focus()};cameraBtn.onclick=startCamera;stopCameraBtn.onclick=stopCamera;(document.getElementById('saveExpiry')||{}).onclick=saveExpiry;(document.getElementById('closeExpiry')||{}).onclick=closeExpiry;(document.getElementById('ocrBtn')||{}).onclick=startOcrCamera;(document.getElementById('captureExpiry')||{}).onclick=captureExpiryDate;(document.getElementById('stopOcr')||{}).onclick=stopOcrCamera;window.addEventListener('online',updateOnline);window.addEventListener('offline',updateOnline);updateOnline();restore();ean.focus();
 const DEFAULT_UNITS=['CD - Estoque Central',...CONDOS];
 let units=[...DEFAULT_UNITS];
 const TOTAL_UNIT='OKEO Consolidado';
@@ -707,6 +766,141 @@ async function renderSalesHistoryFast(){
  delete renderCache.salesHistory;
  return renderSalesHistory();
 }
+
+// ---------------- DIAGNÓSTICO V4.3.3 ----------------
+const OKEO_APP_VERSION='4.3.3';
+const DIAG_KEY='okeo_diagnostics_v433';
+const MODULE_NAMES={
+ inventario:'Inventário',nf:'Entrada por NF',movimentos:'Movimentações',
+ dashboard:'Relatórios',financeiro:'Fluxo de Caixa',dre:'DRE',
+ faturamento:'Faturamento / Vendas',produtos:'Curva ABC',reposicao:'Reposição Inteligente',
+ fornecedores:'Fornecedores',grupos:'Grupos de Demanda',horarios:'Dias / Horários',
+ mensal:'Histórico Mensal',cashback:'Cashback / Energia',fiscal:'Cadastro Fiscal',
+ integracao:'Integração / API',acessos:'Controle de Acesso',diagnostico:'Saúde do Sistema'
+};
+let sessionDiagnosticErrors=0;
+let activeModuleForDiagnostics='startup';
+let moduleHealth={};
+
+function safeDiagText(v){
+ let s=String(v??'');
+ s=s.replace(/(password|senha|token|authorization)\s*[:=]\s*[^,\s}]+/gi,'$1=[REMOVIDO]');
+ s=s.replace(/Bearer\s+[A-Za-z0-9._-]+/gi,'Bearer [REMOVIDO]');
+ return s.slice(0,1800);
+}
+function getDiagnostics(){
+ try{
+   const a=JSON.parse(localStorage.getItem(DIAG_KEY)||'[]');
+   return Array.isArray(a)?a:[];
+ }catch(e){return []}
+}
+function saveDiagnostics(a){
+ try{localStorage.setItem(DIAG_KEY,JSON.stringify(a.slice(-100)))}catch(e){}
+}
+function recordDiagnostic(type,message,detail='',moduleName=''){
+ const item={
+   time:new Date().toISOString(),
+   version:OKEO_APP_VERSION,
+   module:moduleName||activeModuleForDiagnostics||'desconhecido',
+   type:safeDiagText(type),
+   message:safeDiagText(message),
+   detail:safeDiagText(detail),
+   url:location.pathname
+ };
+ const a=getDiagnostics();a.push(item);saveDiagnostics(a);
+ sessionDiagnosticErrors++;
+ moduleHealth[item.module]={status:'error',last:item.time,message:item.message};
+ updateHealthIndicator();
+ try{renderDiagnostics()}catch(e){}
+ return item;
+}
+function markModuleHealthy(name){
+ if(!name)return;
+ const prev=moduleHealth[name];
+ if(!prev||prev.status!=='error')moduleHealth[name]={status:'ok',last:new Date().toISOString(),message:'OK'};
+ updateHealthIndicator();
+}
+function updateHealthIndicator(){
+ const errors=getDiagnostics();
+ const el=document.getElementById('healthCardStatus');
+ if(el)el.textContent=errors.length?`${errors.length} erro(s) registrado(s)`:'Sistema sem erros registrados';
+}
+window.addEventListener('error',e=>{
+ recordDiagnostic('javascript',e.message||'Erro JavaScript',
+   `${e.filename||''}:${e.lineno||''}:${e.colno||''}\n${e.error&&e.error.stack?e.error.stack:''}`);
+});
+window.addEventListener('unhandledrejection',e=>{
+ const r=e.reason;
+ recordDiagnostic('promise',r&&r.message?r.message:'Promise rejeitada',
+   r&&r.stack?r.stack:String(r||''));
+});
+
+async function monitoredModuleRun(name,fn){
+ activeModuleForDiagnostics=name;
+ const started=performance.now();
+ try{
+   const result=await fn();
+   markModuleHealthy(name);
+   return result;
+ }catch(e){
+   recordDiagnostic('module',e&&e.message?e.message:'Falha no módulo',
+     `${e&&e.stack?e.stack:''}\nTempo até falha: ${Math.round(performance.now()-started)} ms`,name);
+   const box=document.getElementById('moduleLoading');
+   if(box){box.style.display='flex';box.textContent=`Falha em ${MODULE_NAMES[name]||name}. Consulte Saúde do Sistema.`}
+   throw e;
+ }finally{
+   activeModuleForDiagnostics='idle';
+ }
+}
+function diagnosticsSnapshot(){
+ const errs=getDiagnostics();
+ return {
+   app:'OKEO Gestão',
+   version:OKEO_APP_VERSION,
+   generatedAt:new Date().toISOString(),
+   browser:navigator.userAgent,
+   online:navigator.onLine,
+   moduleHealth,
+   errors:errs
+ };
+}
+function renderDiagnostics(){
+ const errs=getDiagnostics(),overall=document.getElementById('healthOverall');
+ if(overall){
+   overall.textContent=errs.length?'Atenção':'Tudo OK';
+   overall.className='healthPill '+(errs.length?'warn':'ok');
+ }
+ const set=(id,v)=>{const e=document.getElementById(id);if(e)e.textContent=v};
+ set('diagSessionErrors',sessionDiagnosticErrors);
+ set('diagStoredErrors',errs.length);
+ set('diagLastError',errs.length?new Date(errs[errs.length-1].time).toLocaleString('pt-BR'):'Nenhum');
+
+ const mods=document.getElementById('moduleHealthList');
+ if(mods){
+   mods.innerHTML=Object.keys(MODULE_NAMES).map(k=>{
+     const h=moduleHealth[k]||{status:'unknown',message:'Ainda não testado'};
+     const cls=h.status==='error'?'bad':h.status==='ok'?'ok':'unknown';
+     const label=h.status==='error'?'Falha':h.status==='ok'?'OK':'Não testado';
+     return `<div class="healthModuleRow"><span><b>${MODULE_NAMES[k]}</b><br><small>${safeDiagText(h.message||'')}</small></span><span class="healthPill ${cls}">${label}</span></div>`;
+   }).join('');
+ }
+ const list=document.getElementById('diagnosticErrors');
+ if(list){
+   list.innerHTML=errs.slice().reverse().slice(0,40).map(x=>`<div class="diagError">
+     <b>${MODULE_NAMES[x.module]||x.module} • ${x.type}</b>
+     <small>${new Date(x.time).toLocaleString('pt-BR')} • V${x.version}</small>
+     <div>${safeDiagText(x.message)}</div>
+     ${x.detail?`<pre>${safeDiagText(x.detail)}</pre>`:''}
+   </div>`).join('')||'<div class="healthEmpty">Nenhum erro registrado.</div>';
+ }
+ updateHealthIndicator();
+}
+function downloadDiagnostics(){
+ const blob=new Blob([JSON.stringify(diagnosticsSnapshot(),null,2)],{type:'application/json'});
+ const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+ a.download='OKEO_Diagnostico_'+new Date().toISOString().replace(/[:.]/g,'-')+'.json';
+ a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
 function showTab(name){
  applyRoleUI();
  if(!authState.user||document.getElementById('loginOverlay')?.style.display!=='none')return;
@@ -714,25 +908,22 @@ function showTab(name){
  document.querySelectorAll('.appTab').forEach(x=>x.style.display='none');
  const e=document.getElementById('tab-'+name);if(e)e.style.display='block';
  window.scrollTo(0,0);
+ if(name==='diagnostico'){renderDiagnostics();return}
  setModuleLoading(true);
+
  requestAnimationFrame(()=>setTimeout(()=>{
-   try{
-     if(name==='movimentos')renderStock();
-     if(name==='dashboard')renderDashboard();
-     if(name==='financeiro')renderCash();
-     if(name==='dre')Promise.resolve(renderDreFast()).finally(()=>setModuleLoading(false));
-     if(name==='faturamento')Promise.resolve(renderSalesHistoryFast()).finally(()=>setModuleLoading(false));
-     if(name==='produtos')Promise.resolve(renderProductAnalysisFast()).finally(()=>setModuleLoading(false));
-     if(name==='reposicao')Promise.resolve(renderReplenishmentFast()).finally(()=>setModuleLoading(false));
-     if(name==='fornecedores')renderSupplierList();
-     if(name==='grupos')renderDemandGroups();
-     if(name==='horarios')Promise.resolve(renderTimeAnalysisFast()).finally(()=>setModuleLoading(false));
-     if(name==='mensal')Promise.resolve(renderMonthlyHistoryFast()).finally(()=>setModuleLoading(false));
-     if(name==='cashback')renderPaymentModule();
-     if(name==='fiscal')renderFiscal();
-     if(name==='integracao')renderIntegration();
-     if(name==='acessos')renderUsers();
-   }finally{setModuleLoading(false)}
+   const runners={
+     movimentos:()=>renderStock(),dashboard:()=>renderDashboard(),financeiro:()=>renderCash(),
+     dre:()=>renderDreFast(),faturamento:()=>renderSalesHistoryFast(),produtos:()=>renderProductAnalysisFast(),
+     reposicao:()=>renderReplenishmentFast(),fornecedores:()=>renderSupplierList(),grupos:()=>renderDemandGroups(),
+     horarios:()=>renderTimeAnalysisFast(),mensal:()=>renderMonthlyHistoryFast(),cashback:()=>renderPaymentModule(),
+     fiscal:()=>renderFiscal(),integracao:()=>renderIntegration(),acessos:()=>renderUsers(),
+     inventario:()=>Promise.resolve(),nf:()=>Promise.resolve()
+   };
+   const fn=runners[name]||(()=>Promise.resolve());
+   monitoredModuleRun(name,fn)
+     .catch(()=>{})
+     .finally(()=>setModuleLoading(false));
  },0));
 }
 window.showTab=showTab;
@@ -754,11 +945,11 @@ loadRemoteMaster();
 function preview(i,o){const p=masterProduct(document.getElementById(i).value),x=document.getElementById(o);x.className='status '+(p?'ok':'warn');x.textContent=p?p.produto:(norm(document.getElementById(i).value)?'EAN não cadastrado':'')}
 document.getElementById('moveEan').addEventListener('input',()=>preview('moveEan','moveProduct'));
 document.getElementById('nfEan').addEventListener('input',()=>preview('nfEan','nfProduct'));
-document.getElementById('moveType').onchange=()=>{if(document.getElementById('moveType').value==='ENTRADA_COMPRA'){document.getElementById('moveFrom').value='';document.getElementById('moveTo').value='CD - Estoque Central'}};
-document.getElementById('saveMove').onclick=()=>{const type=document.getElementById('moveType').value,ean=norm(document.getElementById('moveEan').value),qty=parseFloat(document.getElementById('moveQty').value),cost=parseFloat(String(document.getElementById('moveCost').value).replace(',','.'))||0,from=document.getElementById('moveFrom').value,to=document.getElementById('moveTo').value,reason=document.getElementById('moveReason').value.trim(),p=masterProduct(ean),out=document.getElementById('moveMsg');if(!ean||!qty||qty<=0){out.className='status warn';out.textContent='Informe EAN e quantidade.';return}if(type==='TRANSFERENCIA'&&(!from||!to||from===to)){out.className='status warn';out.textContent='Escolha origem e destino diferentes.';return}if(type==='ENTRADA_COMPRA'&&!to){out.className='status warn';out.textContent='Escolha a unidade de entrada.';return}if(!['ENTRADA_COMPRA','TRANSFERENCIA','AJUSTE_POSITIVO'].includes(type)&&!(from||to)){out.className='status warn';out.textContent='Escolha a unidade.';return}applyMovement({id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())),date:new Date().toISOString(),type,from,to,ean,product:p?p.produto:'EAN NÃO CADASTRADO',qty,unitCost:cost,reason});out.className='status ok';out.textContent='Movimentação registrada.';renderStock();renderDashboard()};
+(document.getElementById('moveType')||{}).onchange=()=>{if(document.getElementById('moveType').value==='ENTRADA_COMPRA'){document.getElementById('moveFrom').value='';document.getElementById('moveTo').value='CD - Estoque Central'}};
+(document.getElementById('saveMove')||{}).onclick=()=>{const type=document.getElementById('moveType').value,ean=norm(document.getElementById('moveEan').value),qty=parseFloat(document.getElementById('moveQty').value),cost=parseFloat(String(document.getElementById('moveCost').value).replace(',','.'))||0,from=document.getElementById('moveFrom').value,to=document.getElementById('moveTo').value,reason=document.getElementById('moveReason').value.trim(),p=masterProduct(ean),out=document.getElementById('moveMsg');if(!ean||!qty||qty<=0){out.className='status warn';out.textContent='Informe EAN e quantidade.';return}if(type==='TRANSFERENCIA'&&(!from||!to||from===to)){out.className='status warn';out.textContent='Escolha origem e destino diferentes.';return}if(type==='ENTRADA_COMPRA'&&!to){out.className='status warn';out.textContent='Escolha a unidade de entrada.';return}if(!['ENTRADA_COMPRA','TRANSFERENCIA','AJUSTE_POSITIVO'].includes(type)&&!(from||to)){out.className='status warn';out.textContent='Escolha a unidade.';return}applyMovement({id:(crypto.randomUUID?crypto.randomUUID():String(Date.now())),date:new Date().toISOString(),type,from,to,ean,product:p?p.produto:'EAN NÃO CADASTRADO',qty,unitCost:cost,reason});out.className='status ok';out.textContent='Movimentação registrada.';renderStock();renderDashboard()};
 
 function renderStock(){const u=document.getElementById('stockUnit').value||units[0],q=(document.getElementById('stockSearch').value||'').toLowerCase(),a=[];Object.entries(stockLedger).forEach(([k,s])=>{if(!k.startsWith(u+'|')||s.qty<=0)return;const e=k.slice(u.length+1),p=masterProduct(e),n=p?p.produto:'EAN '+e;if(q&&!n.toLowerCase().includes(q)&&!e.includes(q))return;a.push({ean:e,name:n,...s})});document.getElementById('stockList').innerHTML=a.sort((x,y)=>x.name.localeCompare(y.name)).map(x=>`<div class="stockrow"><div><b>${x.name}</b><br><small>${x.ean} • custo médio R$ ${Number(x.avgCost||0).toFixed(2).replace('.',',')}</small></div><div class="big">${x.qty}</div></div>`).join('')||'<small>Sem estoque lançado nesta unidade.</small>'}
-document.getElementById('stockUnit').onchange=renderStock;document.getElementById('stockSearch').oninput=renderStock;
+(document.getElementById('stockUnit')||{}).onchange=renderStock;(document.getElementById('stockSearch')||{}).oninput=renderStock;
 
 function renderDashboard(){
  const unit=document.getElementById('dashUnit').value||TOTAL_UNIT;
@@ -775,16 +966,16 @@ function renderDashboard(){
  document.getElementById('kpiAvgCost').textContent=(costQty?costWeighted/costQty:0).toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
  document.getElementById('kpiLoss').textContent=loss.toLocaleString('pt-BR');
 }
-document.getElementById('dashUnit').onchange=renderDashboard;
+(document.getElementById('dashUnit')||{}).onchange=renderDashboard;
 
 async function startNfCamera(){const m=document.getElementById('nfOcrMsg');document.getElementById('nfCameraBox').classList.add('open');try{try{stopCamera()}catch(e){};try{stopOcrCamera()}catch(e){};await new Promise(r=>setTimeout(r,300));nfStream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});const v=document.getElementById('nfVideo');v.srcObject=nfStream;await v.play();m.className='status ok';m.textContent=('TextDetector'in window)?'Aponte para os itens da NF e toque em Capturar texto.':'Câmera aberta. OCR automático não disponível; confirme os itens manualmente.'}catch(e){m.className='status warn';m.textContent='Não foi possível abrir a câmera da NF.'}}
 function stopNfCamera(){try{if(nfStream)nfStream.getTracks().forEach(t=>t.stop())}catch(e){}nfStream=null;const v=document.getElementById('nfVideo');if(v)v.srcObject=null;document.getElementById('nfCameraBox').classList.remove('open')}
 async function captureNfText(){const m=document.getElementById('nfOcrMsg'),v=document.getElementById('nfVideo'),c=document.getElementById('nfCanvas');if(!nfStream)return;c.width=v.videoWidth||1280;c.height=v.videoHeight||720;c.getContext('2d').drawImage(v,0,0,c.width,c.height);if(!('TextDetector'in window)){m.className='status warn';m.textContent='OCR nativo indisponível. Confirme os itens manualmente.';return}try{const td=new TextDetector(),b=await td.detect(c);document.getElementById('nfText').value=b.map(x=>x.rawValue||'').join('\n');m.className='status ok';m.textContent='Texto capturado. Confirme cada item antes de lançar.'}catch(e){m.className='status warn';m.textContent='Não consegui interpretar a NF.'}}
-document.getElementById('nfCamera').onclick=startNfCamera;document.getElementById('nfStop').onclick=stopNfCamera;document.getElementById('nfCapture').onclick=captureNfText;
+(document.getElementById('nfCamera')||{}).onclick=startNfCamera;(document.getElementById('nfStop')||{}).onclick=stopNfCamera;(document.getElementById('nfCapture')||{}).onclick=captureNfText;
 function renderNfLines(){document.getElementById('nfLines').innerHTML=invoiceLines.map((x,i)=>`<div class="stockrow"><div><b>${x.product}</b><br><small>${x.ean} • ${x.qty} un • R$ ${Number(x.unitCost).toFixed(2).replace('.',',')}/un</small></div><button class="red expbtn" onclick="removeNfLine(${i})">Excluir</button></div>`).join('')||'<small>Nenhum item confirmado.</small>'}
 window.removeNfLine=i=>{invoiceLines.splice(i,1);renderNfLines()};
-document.getElementById('nfAddLine').onclick=()=>{const e=norm(document.getElementById('nfEan').value),q=parseFloat(document.getElementById('nfQty').value),c=parseFloat(String(document.getElementById('nfCost').value).replace(',','.')),p=masterProduct(e);if(!e||!q||q<=0||isNaN(c)||c<0){alert('Informe EAN, quantidade e custo unitário.');return}invoiceLines.push({ean:e,product:p?p.produto:'EAN NÃO CADASTRADO',qty:q,unitCost:c});renderNfLines();document.getElementById('nfEan').value='';document.getElementById('nfCost').value=''};
-document.getElementById('nfPost').onclick=()=>{const u=document.getElementById('nfUnit').value,n=document.getElementById('nfNumber').value.trim(),o=document.getElementById('nfPostMsg');if(!u||!invoiceLines.length){o.className='status warn';o.textContent='Escolha a unidade e confirme pelo menos um item.';return}invoiceLines.forEach(x=>applyMovement({id:(crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random())),date:new Date().toISOString(),type:'ENTRADA_COMPRA',from:'',to:u,ean:x.ean,product:x.product,qty:x.qty,unitCost:x.unitCost,reason:'NF '+n}));invoiceLines=[];renderNfLines();renderDashboard();o.className='status ok';o.textContent='NF lançada. Custo médio atualizado.'};
+(document.getElementById('nfAddLine')||{}).onclick=()=>{const e=norm(document.getElementById('nfEan').value),q=parseFloat(document.getElementById('nfQty').value),c=parseFloat(String(document.getElementById('nfCost').value).replace(',','.')),p=masterProduct(e);if(!e||!q||q<=0||isNaN(c)||c<0){alert('Informe EAN, quantidade e custo unitário.');return}invoiceLines.push({ean:e,product:p?p.produto:'EAN NÃO CADASTRADO',qty:q,unitCost:c});renderNfLines();document.getElementById('nfEan').value='';document.getElementById('nfCost').value=''};
+(document.getElementById('nfPost')||{}).onclick=()=>{const u=document.getElementById('nfUnit').value,n=document.getElementById('nfNumber').value.trim(),o=document.getElementById('nfPostMsg');if(!u||!invoiceLines.length){o.className='status warn';o.textContent='Escolha a unidade e confirme pelo menos um item.';return}invoiceLines.forEach(x=>applyMovement({id:(crypto.randomUUID?crypto.randomUUID():String(Date.now()+Math.random())),date:new Date().toISOString(),type:'ENTRADA_COMPRA',from:'',to:u,ean:x.ean,product:x.product,qty:x.qty,unitCost:x.unitCost,reason:'NF '+n}));invoiceLines=[];renderNfLines();renderDashboard();o.className='status ok';o.textContent='NF lançada. Custo médio atualizado.'};
 
 // ---------------- FINANCEIRO / DRE / FATURAMENTO / PRODUTOS ----------------
 let cashEntries=JSON.parse(localStorage.getItem('okeo_cash_v32')||'[]');
@@ -894,10 +1085,10 @@ function parseCSV(text){const lines=String(text).replace(/\r/g,'').split('\n').f
 
 function renderCash(){let ins=0,outs=0;cashEntries.forEach(x=>{if(x.type==='ENTRADA')ins+=Number(x.value)||0;else outs+=Number(x.value)||0});document.getElementById('cashIn').textContent=brl(ins);document.getElementById('cashOut').textContent=brl(outs);document.getElementById('cashBalance').textContent=brl(ins-outs);document.getElementById('cashTable').innerHTML=cashEntries.slice().sort((a,b)=>String(b.date).localeCompare(String(a.date))).slice(0,120).map(x=>`<div class="stockrow"><div><b>${x.category}</b><br><small>${x.date} • ${x.desc||''}</small></div><div class="${x.type==='ENTRADA'?'positive':'negative'}"><b>${x.type==='ENTRADA'?'+':'-'} ${brl(x.value)}</b></div></div>`).join('')||'<small>Nenhum lançamento financeiro.</small>'}
 document.getElementById('cashDate').value=new Date().toISOString().slice(0,10);
-document.getElementById('saveCash').onclick=()=>{const d=document.getElementById('cashDate').value,t=document.getElementById('cashType').value,c=document.getElementById('cashCategory').value,desc=document.getElementById('cashDesc').value.trim(),v=parseMoney(document.getElementById('cashValue').value),o=document.getElementById('cashMsg');if(!d||v<=0){o.className='status warn';o.textContent='Informe data e valor.';return}cashEntries.push({id:String(Date.now())+Math.random(),date:d,type:t,category:c,desc,value:v});localStorage.setItem('okeo_cash_v32',JSON.stringify(cashEntries));o.className='status ok';o.textContent='Lançamento salvo.';renderCash()};
+(document.getElementById('saveCash')||{}).onclick=()=>{const d=document.getElementById('cashDate').value,t=document.getElementById('cashType').value,c=document.getElementById('cashCategory').value,desc=document.getElementById('cashDesc').value.trim(),v=parseMoney(document.getElementById('cashValue').value),o=document.getElementById('cashMsg');if(!d||v<=0){o.className='status warn';o.textContent='Informe data e valor.';return}cashEntries.push({id:String(Date.now())+Math.random(),date:d,type:t,category:c,desc,value:v});localStorage.setItem('okeo_cash_v32',JSON.stringify(cashEntries));o.className='status ok';o.textContent='Lançamento salvo.';renderCash()};
 
 function parseOFX(text){const rows=[],blocks=String(text).match(/<STMTTRN>[\s\S]*?<\/STMTTRN>/gi)||[],tag=(b,t)=>{const m=b.match(new RegExp('<'+t+'>([^<\\r\\n]+)','i'));return m?m[1].trim():''};blocks.forEach(b=>{const amount=parseMoney(tag(b,'TRNAMT')),dt=tag(b,'DTPOSTED').slice(0,8),date=dt?dt.slice(0,4)+'-'+dt.slice(4,6)+'-'+dt.slice(6,8):new Date().toISOString().slice(0,10);rows.push({date,type:amount>=0?'ENTRADA':'SAIDA',category:'Outros',desc:tag(b,'MEMO')||tag(b,'NAME')||'Extrato bancário',value:Math.abs(amount)})});return rows}
-document.getElementById('importBank').onclick=async()=>{const f=document.getElementById('bankFile').files[0],o=document.getElementById('bankMsg');if(!f){o.className='status warn';o.textContent='Escolha um arquivo.';return}const text=await f.text();let rows=[];if(f.name.toLowerCase().endsWith('.ofx'))rows=parseOFX(text);else{const raw=parseCSV(text);rows=raw.map(r=>{const keys=Object.keys(r),find=(ts)=>{const k=keys.find(k=>ts.some(t=>k.includes(t)));return k?r[k]:''},val=parseMoney(find(['valor','amount','trnamt'])),date=find(['data','date','dtposted']),desc=find(['descricao','descrição','historico','histórico','memo','name']);return{date:String(date).slice(0,10)||new Date().toISOString().slice(0,10),type:val>=0?'ENTRADA':'SAIDA',category:'Outros',desc,value:Math.abs(val)}}).filter(x=>x.value>0)}cashEntries.push(...rows);localStorage.setItem('okeo_cash_v32',JSON.stringify(cashEntries));o.className='status ok';o.textContent=rows.length+' lançamentos importados.';renderCash()};
+(document.getElementById('importBank')||{}).onclick=async()=>{const f=document.getElementById('bankFile').files[0],o=document.getElementById('bankMsg');if(!f){o.className='status warn';o.textContent='Escolha um arquivo.';return}const text=await f.text();let rows=[];if(f.name.toLowerCase().endsWith('.ofx'))rows=parseOFX(text);else{const raw=parseCSV(text);rows=raw.map(r=>{const keys=Object.keys(r),find=(ts)=>{const k=keys.find(k=>ts.some(t=>k.includes(t)));return k?r[k]:''},val=parseMoney(find(['valor','amount','trnamt'])),date=find(['data','date','dtposted']),desc=find(['descricao','descrição','historico','histórico','memo','name']);return{date:String(date).slice(0,10)||new Date().toISOString().slice(0,10),type:val>=0?'ENTRADA':'SAIDA',category:'Outros',desc,value:Math.abs(val)}}).filter(x=>x.value>0)}cashEntries.push(...rows);localStorage.setItem('okeo_cash_v32',JSON.stringify(cashEntries));o.className='status ok';o.textContent=rows.length+' lançamentos importados.';renderCash()};
 
 function parseSalesCsv(text){const raw=parseCSV(text);return raw.map(r=>{const keys=Object.keys(r),find=(ts)=>{const k=keys.find(k=>ts.some(t=>k.includes(t)));return k?r[k]:''};return{datetime:normalizeDateTime(find(['data','data/hora','datetime'])),unit:String(find(['cliente','local','condominio','condomínio','unidade'])||'').trim(),machine:String(find(['maquina','máquina','equipamento'])||'').trim(),code:String(find(['código do produto','codigo do produto','código','codigo'])||'').trim(),product:String(find(['produto'])||'').trim(),qty:parseMoney(find(['quantidade','qtd'])),value:parseMoney(find(['valor','total','venda']))}}).filter(x=>x.datetime&&x.unit&&(x.value||x.qty))}
 
@@ -942,7 +1133,7 @@ function refreshAllAnalyses(){
  try{renderReplenishment()}catch(e){}
  try{renderTimeAnalysis()}catch(e){}
 }
-document.getElementById('importSales').onclick=async()=>{
+(document.getElementById('importSales')||{}).onclick=async()=>{
  const f=document.getElementById('salesFile').files[0],o=document.getElementById('salesMsg');
  if(!f){o.className='status warn';o.textContent='Escolha um arquivo de vendas.';return}
  o.className='status';o.textContent='Lendo e processando arquivo...';
@@ -1017,7 +1208,7 @@ function dreKey(){return [document.getElementById('dreFrom').value,document.getE
 function dreAuto(){const sm=salesMetrics(document.getElementById('dreUnit').value||TOTAL_UNIT,document.getElementById('dreFrom').value,document.getElementById('dreTo').value);return{sales:sm.revenue,cmv:sm.cmv}}
 function renderDre(useAuto=false){fillAnalysisUnitSelect('dreUnit');const saved=dreCustom[dreKey()]||{},auto=dreAuto();document.getElementById('dreEditRows').innerHTML=DRE_LINES.map(([k,l])=>{let v=saved[k];if(v===undefined||useAuto){if(k==='sales'||k==='cmv')v=auto[k]||0;else if(v===undefined)v=0}return `<div class="dreEditRow"><span>${l}</span><input class="dreMoney" id="dre_${k}" type="number" step="0.01" value="${Number(v||0).toFixed(2)}"><b id="drePct_${k}">0,0%</b></div>`}).join('');document.querySelectorAll('.dreMoney').forEach(e=>e.addEventListener('input',calcDre));calcDre()}
 function calcDre(){const v={};DRE_LINES.forEach(([k])=>v[k]=parseMoney(document.getElementById('dre_'+k)?.value));const sales=v.sales||0;let net=sales;DRE_LINES.slice(1).forEach(([k])=>net-=Math.abs(v[k]||0));DRE_LINES.forEach(([k])=>{const e=document.getElementById('drePct_'+k);if(e)e.textContent=(sales?Math.abs(v[k]||0)/sales*100:0).toFixed(1).replace('.',',')+'%'});document.getElementById('dreNet').textContent=brl(net);document.getElementById('dreNetPct').textContent=(sales?net/sales*100:0).toFixed(1).replace('.',',')+'%';return{...v,net}}
-document.getElementById('refreshDre').onclick=async()=>{await loadHistoricalSales(false);renderDre(false)};document.getElementById('dreLoadAuto').onclick=async()=>{await loadHistoricalSales(false);renderDre(true)};document.getElementById('dreSave').onclick=()=>{dreCustom[dreKey()]={...calcDre(),savedAt:new Date().toISOString()};localStorage.setItem('okeo_dre_custom_v423',JSON.stringify(dreCustom));const o=document.getElementById('dreMsg');o.className='status ok';o.textContent='DRE salva.'};['dreFrom','dreTo','dreUnit'].forEach(id=>document.getElementById(id)?.addEventListener('change',()=>renderDre(false)));
+(document.getElementById('refreshDre')||{}).onclick=async()=>{await loadHistoricalSales(false);renderDre(false)};(document.getElementById('dreLoadAuto')||{}).onclick=async()=>{await loadHistoricalSales(false);renderDre(true)};(document.getElementById('dreSave')||{}).onclick=()=>{dreCustom[dreKey()]={...calcDre(),savedAt:new Date().toISOString()};localStorage.setItem('okeo_dre_custom_v423',JSON.stringify(dreCustom));const o=document.getElementById('dreMsg');o.className='status ok';o.textContent='DRE salva.'};['dreFrom','dreTo','dreUnit'].forEach(id=>document.getElementById(id)?.addEventListener('change',()=>renderDre(false)));
 
 let abcVisibleRows=100;
 let lastAbcAnalysis=null;
@@ -1137,10 +1328,10 @@ function renderProductAnalysis(){
  updatePeriodButtons('prod');
 }
 fillAnalysisUnitSelect('prodUnit');
-document.getElementById('refreshProducts').onclick=()=>{delete renderCache.prod;renderProductAnalysisFast()};
+(document.getElementById('refreshProducts')||{}).onclick=()=>{delete renderCache.prod;renderProductAnalysisFast()};
 ['prodFrom','prodTo','prodUnit','prodSort'].forEach(id=>document.getElementById(id)?.addEventListener('change',()=>{delete renderCache.prod;renderProductAnalysisFast()}));
-document.getElementById('abcShowMore').onclick=()=>{abcVisibleRows+=100;renderAbcRows()};
-document.getElementById('abcShowAll').onclick=()=>{abcVisibleRows=lastAbcAnalysis?lastAbcAnalysis.arr.length:100;renderAbcRows()};
+(document.getElementById('abcShowMore')||{}).onclick=()=>{abcVisibleRows+=100;renderAbcRows()};
+(document.getElementById('abcShowAll')||{}).onclick=()=>{abcVisibleRows=lastAbcAnalysis?lastAbcAnalysis.arr.length:100;renderAbcRows()};
 
 // ---------------- GRUPOS DE DEMANDA V4 ----------------
 let demandGroups=JSON.parse(localStorage.getItem('okeo_demand_groups_v35')||'{}');
@@ -1216,11 +1407,11 @@ window.deleteDemandGroup=id=>{
  Object.keys(productGroup).forEach(e=>{if(productGroup[e]===id)delete productGroup[e]});
  delete demandGroups[id];saveDemandGroups();renderDemandGroups();
 }
-document.getElementById('groupSearch').oninput=renderDemandGroups;
-document.getElementById('groupFilter').onchange=renderDemandGroups;
-document.getElementById('selectVisibleProducts').onclick=()=>{filteredGroupProducts().forEach(p=>groupSelection.add(norm(p.ean)));renderDemandGroups()}
-document.getElementById('clearProductSelection').onclick=()=>{groupSelection.clear();renderDemandGroups()}
-document.getElementById('createGroup').onclick=()=>{
+(document.getElementById('groupSearch')||{}).oninput=renderDemandGroups;
+(document.getElementById('groupFilter')||{}).onchange=renderDemandGroups;
+(document.getElementById('selectVisibleProducts')||{}).onclick=()=>{filteredGroupProducts().forEach(p=>groupSelection.add(norm(p.ean)));renderDemandGroups()}
+(document.getElementById('clearProductSelection')||{}).onclick=()=>{groupSelection.clear();renderDemandGroups()}
+(document.getElementById('createGroup')||{}).onclick=()=>{
  const n=document.getElementById('groupName').value.trim(),m=document.getElementById('groupMode').value,o=document.getElementById('groupMsg');
  if(!n){o.className='status warn';o.textContent='Informe o nome do grupo.';return}
  if(!groupSelection.size){o.className='status warn';o.textContent='Selecione pelo menos um produto.';return}
@@ -1231,7 +1422,7 @@ document.getElementById('createGroup').onclick=()=>{
  renderDemandGroups();
  try{queueSync('group_save',{id,name:n,mode:m,items:Object.entries(productGroup).filter(([e,g])=>g===id).map(([ean])=>({ean,product:(masterProduct(ean)||{}).produto||''}))})}catch(e){}
 }
-document.getElementById('addSelectedToGroup').onclick=()=>{
+(document.getElementById('addSelectedToGroup')||{}).onclick=()=>{
  const id=document.getElementById('existingGroupSelect').value;
  if(!id){alert('Selecione um grupo.');return}
  if(!groupSelection.size){alert('Selecione pelo menos um produto.');return}
@@ -1280,12 +1471,12 @@ function renderTimeAnalysis(){
  let t='<div class="heatwrap"><table class="heattable"><tr><th>Dia</th>'+HOUR_BUCKETS.map(h=>`<th>${h}</th>`).join('')+'</tr>';
  DAY_NAMES.forEach(d=>{t+='<tr><th>'+d+'</th>'+HOUR_BUCKETS.map(h=>{const v=heat[d][h],lvl=Math.min(5,Math.ceil(v/max*5));return `<td class="heat${lvl}">${v}</td>`}).join('')+'</tr>'});t+='</table></div>';document.getElementById('heatmapTable').innerHTML=t;
 }
-document.getElementById('timeProductSearch').oninput=()=>{const q=document.getElementById('timeProductSearch').value.toLowerCase(),uniq={};PRODUCTS.forEach(p=>{const e=norm(p.ean);if(e&&!uniq[e])uniq[e]=p});const a=Object.values(uniq).filter(p=>q&&(p.produto.toLowerCase().includes(q)||norm(p.ean).includes(q))).slice(0,12);document.getElementById('timeProductMatches').innerHTML=a.map(p=>`<button class="gray tagbtn" onclick="selectTimeProduct('${norm(p.ean)}','${encodeURIComponent(p.produto)}')">${p.produto}</button>`).join('')};
+(document.getElementById('timeProductSearch')||{}).oninput=()=>{const q=document.getElementById('timeProductSearch').value.toLowerCase(),uniq={};PRODUCTS.forEach(p=>{const e=norm(p.ean);if(e&&!uniq[e])uniq[e]=p});const a=Object.values(uniq).filter(p=>q&&(p.produto.toLowerCase().includes(q)||norm(p.ean).includes(q))).slice(0,12);document.getElementById('timeProductMatches').innerHTML=a.map(p=>`<button class="gray tagbtn" onclick="selectTimeProduct('${norm(p.ean)}','${encodeURIComponent(p.produto)}')">${p.produto}</button>`).join('')};
 window.selectTimeProduct=(e,n)=>{selectedTimeEan=e;document.getElementById('timeProductSearch').value=decodeURIComponent(n);document.getElementById('timeProductMatches').innerHTML='';renderTimeAnalysis()}
-document.getElementById('refreshTime').onclick=renderTimeAnalysis;document.getElementById('timeUnit').onchange=renderTimeAnalysis;document.getElementById('timeWeeks').onchange=renderTimeAnalysis;
+(document.getElementById('refreshTime')||{}).onclick=renderTimeAnalysis;(document.getElementById('timeUnit')||{}).onchange=renderTimeAnalysis;(document.getElementById('timeWeeks')||{}).onchange=renderTimeAnalysis;
 
 // ---------------- PDF REPOSIÇÃO ----------------
-document.getElementById('pdfRepl').onclick=()=>{
+(document.getElementById('pdfRepl')||{}).onclick=()=>{
  renderReplenishment();
  const rows=lastReplenishment.filter(x=>x.alert&&x.suggested>0);
  if(!rows.length){alert('Não há itens em alerta de reposição.');return}
@@ -1511,14 +1702,14 @@ function renderReplenishment(){
  }).join('');
  document.getElementById('replTable').innerHTML=out||'<small>Nenhum produto corresponde aos filtros atuais.</small>';
 }
-document.getElementById('replStatus').onchange=()=>{delete renderCache.repl;renderReplenishmentFast()};
-document.getElementById('replSearch').oninput=debounce(()=>{delete renderCache.repl;renderReplenishmentFast()},160);
-document.getElementById('refreshRepl').onclick=()=>{delete renderCache.repl;renderReplenishmentFast()};
-document.getElementById('replWeeks').onchange=()=>{delete renderCache.repl;renderReplenishmentFast()};
-document.getElementById('replMinFactor').onchange=()=>{delete renderCache.repl;renderReplenishmentFast()};
-document.getElementById('replMaxFactor').onchange=()=>{delete renderCache.repl;renderReplenishmentFast()};
-document.getElementById('replUnit').onchange=()=>{delete renderCache.repl;renderReplenishmentFast()};
-document.getElementById('replSupplier').onchange=()=>{delete renderCache.repl;renderReplenishmentFast()};
+(document.getElementById('replStatus')||{}).onchange=()=>{delete renderCache.repl;renderReplenishmentFast()};
+(document.getElementById('replSearch')||{}).oninput=debounce(()=>{delete renderCache.repl;renderReplenishmentFast()},160);
+(document.getElementById('refreshRepl')||{}).onclick=()=>{delete renderCache.repl;renderReplenishmentFast()};
+(document.getElementById('replWeeks')||{}).onchange=()=>{delete renderCache.repl;renderReplenishmentFast()};
+(document.getElementById('replMinFactor')||{}).onchange=()=>{delete renderCache.repl;renderReplenishmentFast()};
+(document.getElementById('replMaxFactor')||{}).onchange=()=>{delete renderCache.repl;renderReplenishmentFast()};
+(document.getElementById('replUnit')||{}).onchange=()=>{delete renderCache.repl;renderReplenishmentFast()};
+(document.getElementById('replSupplier')||{}).onchange=()=>{delete renderCache.repl;renderReplenishmentFast()};
 
 function replenishmentCsv(){
  const rows=[['Fornecedor','Condomínio','Grupo de demanda','EAN','Produto','Venda média semanal','Pico mensurado','Estoque mínimo','Estoque atual','Estoque ideal','Cobertura semanas','Status','Quantidade a repor']];
@@ -1526,7 +1717,7 @@ function replenishmentCsv(){
  let esc=s=>'"'+String(s??'').replaceAll('"','""')+'"';
  return '\ufeff'+rows.map(r=>r.map(esc).join(';')).join('\r\n');
 }
-document.getElementById('downloadRepl').onclick=()=>{
+(document.getElementById('downloadRepl')||{}).onclick=()=>{
  renderReplenishment();
  const b=new Blob([replenishmentCsv()],{type:'text/csv;charset=utf-8'}),a=document.createElement('a');
  a.href=URL.createObjectURL(b);a.download='Reposicao_OKEO_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
@@ -1539,7 +1730,7 @@ document.getElementById('supplierEan').addEventListener('input',()=>{
  o.className='status '+(p?'ok':'warn');o.textContent=p?p.produto:(e?'EAN não cadastrado':'');
  if(e&&supplierMap[e])document.getElementById('supplierName').value=supplierMap[e];
 });
-document.getElementById('saveSupplier').onclick=()=>{
+(document.getElementById('saveSupplier')||{}).onclick=()=>{
  const e=norm(document.getElementById('supplierEan').value),n=document.getElementById('supplierName').value.trim(),o=document.getElementById('supplierMsg');
  if(!e||!n){o.className='status warn';o.textContent='Informe EAN e fornecedor.';return}
  supplierMap[e]=n;saveSupplierMap();o.className='status ok';o.textContent='Fornecedor salvo.';renderSupplierList();
@@ -1550,8 +1741,8 @@ function renderSupplierList(){
  document.getElementById('supplierList').innerHTML=arr.sort((a,b)=>a.supplier.localeCompare(b.supplier)||a.product.localeCompare(b.product)).map(x=>`<div class="supplierrow"><div><b>${x.product}</b><br><small>${x.ean}</small></div><div>${x.supplier}</div></div>`).join('')||'<small>Nenhum fornecedor cadastrado.</small>';
  refreshReplFilters();
 }
-document.getElementById('supplierSearch').oninput=renderSupplierList;
-document.getElementById('importSuppliers').onclick=async()=>{
+(document.getElementById('supplierSearch')||{}).oninput=renderSupplierList;
+(document.getElementById('importSuppliers')||{}).onclick=async()=>{
  const f=document.getElementById('supplierFile').files[0];if(!f){alert('Escolha um CSV.');return}
  const raw=parseCSV(await f.text());let n=0;
  raw.forEach(r=>{
@@ -1595,15 +1786,15 @@ function renderMonthlyHistory(){
    return `<div class="monthlyrow"><b>${m}</b><span>${brl(x.revenue)}</span><span>${x.tickets.toLocaleString('pt-BR')}</span><span>${brl(avg)}</span><span>${brl(x.cmv)}</span><span>${pct.toFixed(1).replace('.',',')}%</span></div>`;
  }).join('')||'<small>Sem histórico.</small>';
 }
-document.getElementById('refreshMonthly').onclick=async()=>{await loadHistoricalSales(false);renderMonthlyHistory()};document.getElementById('monthlyUnit').onchange=renderMonthlyHistory;
+(document.getElementById('refreshMonthly')||{}).onclick=async()=>{await loadHistoricalSales(false);renderMonthlyHistory()};(document.getElementById('monthlyUnit')||{}).onchange=renderMonthlyHistory;
 function salesRevenueForMonthUnit(month,unit){return monthlyMetrics(month,unit).revenue}
 function paymentCalc(){const month=document.getElementById('payMonth').value,unit=document.getElementById('payUnit').value,revenue=salesRevenueForMonthUnit(month,unit),pct=parseMoney(document.getElementById('payCashPct').value),prev=parseMoney(document.getElementById('payPrevRead').value),curr=parseMoney(document.getElementById('payCurrRead').value),rate=parseMoney(document.getElementById('payEnergyRate').value),kwh=Math.max(0,curr-prev),cash=revenue*pct/100,energy=kwh*rate,total=cash+energy;document.getElementById('payRevenue').value=revenue.toFixed(2);document.getElementById('cashbackValue').textContent=brl(cash);document.getElementById('energyKwh').textContent=kwh.toFixed(2)+' kWh';document.getElementById('energyValue').textContent=brl(energy);document.getElementById('paymentTotal').textContent=brl(total);return{month,unit,revenue,cashbackPct:pct,cashbackValue:cash,previousReading:prev,currentReading:curr,kwh,energyRate:rate,energyValue:energy,total,note:document.getElementById('payNote').value.trim()}}
 function latestPreviousReading(unit,month){const a=paymentHistory.filter(x=>x.unit===unit&&x.month<month).sort((a,b)=>b.month.localeCompare(a.month));return a.length?Number(a[0].currentReading)||0:0}
 function prefillPayment(){const month=document.getElementById('payMonth').value,unit=document.getElementById('payUnit').value;if(!month||!unit)return;const x=paymentHistory.find(x=>x.month===month&&x.unit===unit);if(x){document.getElementById('payCashPct').value=x.cashbackPct||0;document.getElementById('payPrevRead').value=x.previousReading||0;document.getElementById('payCurrRead').value=x.currentReading||0;document.getElementById('payEnergyRate').value=x.energyRate||0;document.getElementById('payNote').value=x.note||''}else{document.getElementById('payPrevRead').value=latestPreviousReading(unit,month)||''}paymentCalc()}
 function renderPaymentHistory(){fillUnitSelect('payHistoryUnit',true);const u=document.getElementById('payHistoryUnit').value||'',rows=paymentHistory.filter(x=>!u||x.unit===u).sort((a,b)=>b.month.localeCompare(a.month));document.getElementById('paymentHistory').innerHTML='<div class="payrow"><b>Mês</b><b>Condomínio</b><b>Cashback</b><b>kWh</b><b>Energia</b><b>Total</b></div>'+rows.map(x=>`<div class="payrow"><b>${x.month}</b><span>${x.unit}</span><span>${brl(x.cashbackValue)}</span><span>${x.kwh}</span><span>${brl(x.energyValue)}</span><b>${brl(x.total)}</b></div>`).join('')}
 function renderPaymentModule(){fillUnitSelect('payUnit',false);fillUnitSelect('payHistoryUnit',true);if(!document.getElementById('payMonth').value){const d=new Date();d.setMonth(d.getMonth()-1);document.getElementById('payMonth').value=d.toISOString().slice(0,7)}prefillPayment();renderPaymentHistory()}
-document.getElementById('calcPayment').onclick=paymentCalc;document.getElementById('payMonth').onchange=prefillPayment;document.getElementById('payUnit').onchange=prefillPayment;document.getElementById('payHistoryUnit').onchange=renderPaymentHistory;
-document.getElementById('savePayment').onclick=()=>{const d=paymentCalc(),o=document.getElementById('paymentMsg');if(!d.month||!d.unit){o.className='status warn';o.textContent='Informe mês e condomínio.';return}if(d.currentReading<d.previousReading){o.className='status warn';o.textContent='A leitura atual não pode ser menor que a anterior.';return}const idx=paymentHistory.findIndex(x=>x.month===d.month&&x.unit===d.unit),item={id:idx>=0?paymentHistory[idx].id:String(Date.now()),savedAt:new Date().toISOString(),...d};if(idx>=0)paymentHistory[idx]=item;else paymentHistory.push(item);localStorage.setItem('okeo_payment_history_v36',JSON.stringify(paymentHistory));o.className='status ok';o.textContent='Fechamento salvo.';renderPaymentHistory()}
+(document.getElementById('calcPayment')||{}).onclick=paymentCalc;(document.getElementById('payMonth')||{}).onchange=prefillPayment;(document.getElementById('payUnit')||{}).onchange=prefillPayment;(document.getElementById('payHistoryUnit')||{}).onchange=renderPaymentHistory;
+(document.getElementById('savePayment')||{}).onclick=()=>{const d=paymentCalc(),o=document.getElementById('paymentMsg');if(!d.month||!d.unit){o.className='status warn';o.textContent='Informe mês e condomínio.';return}if(d.currentReading<d.previousReading){o.className='status warn';o.textContent='A leitura atual não pode ser menor que a anterior.';return}const idx=paymentHistory.findIndex(x=>x.month===d.month&&x.unit===d.unit),item={id:idx>=0?paymentHistory[idx].id:String(Date.now()),savedAt:new Date().toISOString(),...d};if(idx>=0)paymentHistory[idx]=item;else paymentHistory.push(item);localStorage.setItem('okeo_payment_history_v36',JSON.stringify(paymentHistory));o.className='status ok';o.textContent='Fechamento salvo.';renderPaymentHistory()}
 
 let fiscalMap=JSON.parse(localStorage.getItem('okeo_fiscal_v37')||'{}');
 try{const dyn=JSON.parse(localStorage.getItem('okeo_dynamic_products_v37')||'[]');dyn.forEach(p=>{if(!masterProduct(p.ean))PRODUCTS.push(p)})}catch(e){}
@@ -1614,9 +1805,9 @@ async function autoFiscalLookup(e){e=norm(e);const f=getFiscal(e),p=fiscalProduc
 function renderFiscal(){const q=(document.getElementById('fiscalSearch')?.value||'').toLowerCase(),fil=document.getElementById('fiscalStatusFilter')?.value||'',uniq={};PRODUCTS.forEach(p=>{const e=norm(p.ean);if(e&&!uniq[e])uniq[e]=p});const rows=Object.values(uniq).map(p=>({p,f:getFiscal(p.ean)})).filter(x=>{const st=x.f.scStatus==='VALIDADO_SC'?'VALIDADO_SC':x.f.status;return(!q||x.p.produto.toLowerCase().includes(q)||norm(x.p.ean).includes(q))&&(!fil||st===fil)});document.getElementById('fiscalPending').textContent=rows.filter(x=>!x.f.ncm||x.f.status==='PENDENTE'||x.f.status==='REVISAO').length;document.getElementById('fiscalValidated').textContent=rows.filter(x=>x.f.scStatus==='VALIDADO_SC').length;document.getElementById('fiscalList').innerHTML=rows.slice(0,300).map(({p,f})=>`<div class="fiscalrow ${f.scStatus==='VALIDADO_SC'?'valid':f.status==='REVISAO'?'review':'pending'}"><div><b>${p.produto}</b><br><small>${norm(p.ean)} • ${f.source||'sem fonte'}</small></div><div>${f.ncm||'-'}<br><small>NCM</small></div><div>${f.cest||'-'}<br><small>CEST</small></div><div><span class="statuspill">${f.scStatus==='VALIDADO_SC'?'VALIDADO SC':f.status}</span><br><button class="gray tagbtn" onclick="lookupFiscalNow('${norm(p.ean)}')">Consultar</button><button class="gray tagbtn" onclick="editFiscal('${norm(p.ean)}')">Revisar</button></div></div>`).join('')}
 window.lookupFiscalNow=e=>autoFiscalLookup(e);
 window.editFiscal=e=>{const f=getFiscal(e),p=fiscalProduct(e);document.getElementById('fiscalEdit').style.display='block';document.getElementById('fiscalEditEan').value=e;document.getElementById('fiscalEditProduct').innerHTML='<b>'+p.produto+'</b><br><small>'+e+'</small>';document.getElementById('fiscalEditNcm').value=f.ncm||'';document.getElementById('fiscalEditCest').value=f.cest||'';document.getElementById('fiscalEditSc').value=f.scStatus||'PENDENTE';document.getElementById('fiscalEditSource').value=f.source||''}
-document.getElementById('saveFiscalReview').onclick=()=>{const e=norm(document.getElementById('fiscalEditEan').value),f=getFiscal(e);f.ncm=norm(document.getElementById('fiscalEditNcm').value).slice(0,8);f.cest=norm(document.getElementById('fiscalEditCest').value).slice(0,7);f.scStatus=document.getElementById('fiscalEditSc').value;f.status=f.ncm?'ENCONTRADO':'PENDENTE';f.source=document.getElementById('fiscalEditSource').value.trim()||'REVISAO_MANUAL';f.checkedAt=new Date().toISOString();saveFiscal();renderFiscal()}
-document.getElementById('fiscalSearch').oninput=renderFiscal;document.getElementById('fiscalStatusFilter').onchange=renderFiscal;document.getElementById('refreshFiscal').onclick=renderFiscal;
-document.getElementById('saveNewProduct').onclick=async()=>{const e=norm(document.getElementById('newProdEan').value),name=document.getElementById('newProdName').value.trim(),maker=document.getElementById('newProdMaker').value.trim(),cat=document.getElementById('newProdCategory').value.trim(),sup=document.getElementById('newProdSupplier').value.trim(),o=document.getElementById('newProdMsg');if(!e||!name){o.className='status warn';o.textContent='Informe EAN e produto.';return}if(masterProduct(e)){o.className='status warn';o.textContent='EAN já cadastrado.';return}const prod={condominio:'',codigo:'',ean:e,produto:name,fabricante:maker,categoria:cat,ncm:'',cest:'',ean_adicional:''};PRODUCTS.push(prod);const dyn=JSON.parse(localStorage.getItem('okeo_dynamic_products_v37')||'[]');dyn.push(prod);localStorage.setItem('okeo_dynamic_products_v37',JSON.stringify(dyn));if(sup){supplierMap[e]=sup;saveSupplierMap()}o.className='status ok';o.textContent='Produto cadastrado. Consultando fiscal...';const f=await autoFiscalLookup(e);o.textContent=f.ncm?`NCM ${f.ncm}${f.cest?' • CEST '+f.cest:''} • SC: ${f.scStatus}`:'Produto cadastrado. NCM/CEST pendente de fonte confiável.'}
+(document.getElementById('saveFiscalReview')||{}).onclick=()=>{const e=norm(document.getElementById('fiscalEditEan').value),f=getFiscal(e);f.ncm=norm(document.getElementById('fiscalEditNcm').value).slice(0,8);f.cest=norm(document.getElementById('fiscalEditCest').value).slice(0,7);f.scStatus=document.getElementById('fiscalEditSc').value;f.status=f.ncm?'ENCONTRADO':'PENDENTE';f.source=document.getElementById('fiscalEditSource').value.trim()||'REVISAO_MANUAL';f.checkedAt=new Date().toISOString();saveFiscal();renderFiscal()}
+(document.getElementById('fiscalSearch')||{}).oninput=renderFiscal;(document.getElementById('fiscalStatusFilter')||{}).onchange=renderFiscal;(document.getElementById('refreshFiscal')||{}).onclick=renderFiscal;
+(document.getElementById('saveNewProduct')||{}).onclick=async()=>{const e=norm(document.getElementById('newProdEan').value),name=document.getElementById('newProdName').value.trim(),maker=document.getElementById('newProdMaker').value.trim(),cat=document.getElementById('newProdCategory').value.trim(),sup=document.getElementById('newProdSupplier').value.trim(),o=document.getElementById('newProdMsg');if(!e||!name){o.className='status warn';o.textContent='Informe EAN e produto.';return}if(masterProduct(e)){o.className='status warn';o.textContent='EAN já cadastrado.';return}const prod={condominio:'',codigo:'',ean:e,produto:name,fabricante:maker,categoria:cat,ncm:'',cest:'',ean_adicional:''};PRODUCTS.push(prod);const dyn=JSON.parse(localStorage.getItem('okeo_dynamic_products_v37')||'[]');dyn.push(prod);localStorage.setItem('okeo_dynamic_products_v37',JSON.stringify(dyn));if(sup){supplierMap[e]=sup;saveSupplierMap()}o.className='status ok';o.textContent='Produto cadastrado. Consultando fiscal...';const f=await autoFiscalLookup(e);o.textContent=f.ncm?`NCM ${f.ncm}${f.cest?' • CEST '+f.cest:''} • SC: ${f.scStatus}`:'Produto cadastrado. NCM/CEST pendente de fonte confiável.'}
 
 // ---------------- CAMADA ÚNICA DE DADOS / API-READY ----------------
 const OKEO_DEFAULT_BACKEND='https://script.google.com/macros/s/AKfycbxFBV9P3t0t4FAX4y83yPhQpQnDmLJzNsp4afqoD6NKXMBROOO6Zm-00fuWgqjrcvgq/exec';
@@ -1635,7 +1826,7 @@ function renderIntegration(){
  document.getElementById('srcFinance').textContent='MANUAL';
  document.getElementById('srcPhotos').textContent=integrationConfig.provider==='VMPAY'?'VMPAY / FUTURO':'FUTURO';
 }
-document.getElementById('saveIntegration').onclick=()=>{
+(document.getElementById('saveIntegration')||{}).onclick=()=>{
  integrationConfig={
    mode:document.getElementById('dataSourceMode').value,
    provider:document.getElementById('apiProvider').value,
@@ -1669,7 +1860,7 @@ async function apiPost(action,data){
  return true;
 }
 
-document.getElementById('testApi').onclick=async()=>{
+(document.getElementById('testApi')||{}).onclick=async()=>{
  const o=document.getElementById('apiStatus');o.className='status';o.textContent='Testando...';
  try{
    const d=await apiRequest('status');
@@ -1730,7 +1921,7 @@ async function syncFromApi(){
  refreshAllAnalyses();
  return {ok:true,...result};
 }
-document.getElementById('syncApiNow').onclick=async()=>{
+(document.getElementById('syncApiNow')||{}).onclick=async()=>{
  const o=document.getElementById('apiStatus');
  o.className='status';o.textContent='Sincronizando...';
  try{
@@ -1781,6 +1972,10 @@ async function postBackend(action,data={},withToken=true){
  const body={action,data}; if(withToken&&authState.token)body.token=authState.token;
  const r=await fetch(url,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(body)});
  return await r.json();
+}
+
+function recordBackendFailure(action,e){
+ recordDiagnostic('backend',e&&e.message?e.message:'Falha de comunicação',`Ação: ${safeDiagText(action)}`,'integracao');
 }
 async function getBackend(action,params={}){
  const u=new URL(backendUrl());u.searchParams.set('action',action);if(authState.token)u.searchParams.set('token',authState.token);
@@ -1868,24 +2063,20 @@ async function saveUserWithHash(data){
  const passwordHash=await sha256Hex(salt+'|'+String(data.password||''));
  return await getBackend('user_save_hashed',{username:data.username,name:data.name,role:data.role,active:data.active!==false?'1':'0',salt,passwordHash});
 }
-document.getElementById('loginBtn').onclick=async()=>{
- const o=document.getElementById('loginMsg'),btn=document.getElementById('loginBtn');
- const username=document.getElementById('loginUser').value.trim(),password=document.getElementById('loginPass').value;
- if(!username||!password){o.className='status warn';o.textContent='Informe usuário e senha.';return}
- btn.disabled=true;o.className='status';o.textContent='Entrando...';
+
+window.okeoCompleteLogin=function(r){
  try{
-   const r=await loginWithChallenge(username,password);
-   if(!r||!r.ok)throw new Error((r&&r.error)||'Login inválido');
-   authState={token:r.token,user:r.user};localStorage.setItem('okeo_auth_token_v39',r.token);
-   document.getElementById('loginOverlay').style.display='none';o.textContent='';btn.disabled=false;
+   authState={token:r.token,user:r.user};
+   localStorage.setItem('okeo_auth_token_v39',r.token);
+   document.getElementById('loginOverlay').style.display='none';
+   const btn=document.getElementById('loginBtn');if(btn)btn.disabled=false;
    applyRoleUI();setAnalysisDefaults();showTab('inventario');flushSyncQueue();
-   // Somente após a interface já estar aberta, prepara resumo leve e vendas locais.
-   setTimeout(()=>{ensureLocalSalesLoaded();loadUnitDayHistory().then(()=>renderHomeDashboard()).catch(()=>{})},250);
+   setTimeout(()=>{try{ensureLocalSalesLoaded();loadUnitDayHistory().then(()=>renderHomeDashboard()).catch(()=>{})}catch(e){}},250);
  }catch(e){
-   btn.disabled=false;o.className='status warn';o.textContent='Não foi possível entrar. '+(e?.message||'Confira usuário e senha.');
+   console.error('Complete login',e);
  }
 };
-
+// O botão Entrar é controlado pelo bloco isolado #okeo-login-core.
 function renderHomeDashboard(){
  try{
    if(!historicalUnitDayRows.length)return;
@@ -1902,8 +2093,8 @@ async function renderUsers(){
  if(!authState.user||authState.user.role!=='ADMIN')return;
  try{const r=await getBackend('users');document.getElementById('usersList').innerHTML=(r.users||[]).map(u=>`<div class="stockrow"><div><b>${u.name}</b><br><small>${u.username} • ${u.role}</small></div><div>${u.active?'Ativo':'Inativo'}</div></div>`).join('')}catch(e){}
 }
-document.getElementById('refreshUsersBtn').onclick=renderUsers;
-document.getElementById('saveUserBtn').onclick=async()=>{
+(document.getElementById('refreshUsersBtn')||{}).onclick=renderUsers;
+(document.getElementById('saveUserBtn')||{}).onclick=async()=>{
  const o=document.getElementById('userSaveMsg');
  const data={username:document.getElementById('newUserLogin').value.trim(),name:document.getElementById('newUserName').value.trim(),password:document.getElementById('newUserPassword').value,role:document.getElementById('newUserRole').value,active:true};
  try{const r=await saveUserWithHash(data);if(!r.ok)throw 0;o.className='status ok';o.textContent='Usuário salvo.';renderUsers()}catch(e){o.className='status warn';o.textContent='Não foi possível salvar.'}
@@ -1921,13 +2112,142 @@ function totalStockMetrics(){
  }));
  return {qty,value,avg:qty?weighted/qty:0};
 }
+
+(document.getElementById('diagRefresh')||{}).onclick=renderDiagnostics;
+(document.getElementById('diagDownload')||{}).onclick=downloadDiagnostics;
+(document.getElementById('diagClear')||{}).onclick=()=>{
+ if(confirm('Limpar todos os erros registrados?')){
+   localStorage.removeItem(DIAG_KEY);sessionDiagnosticErrors=0;moduleHealth={};renderDiagnostics();
+ }
+};
+updateHealthIndicator();
 (async()=>{
  try{
+   const token=localStorage.getItem('okeo_auth_token_v39')||'';
+   if(!token){document.getElementById('loginOverlay').style.display='flex';return}
    if(await validateSession()){
      document.getElementById('loginOverlay').style.display='none';
      applyRoleUI();setAnalysisDefaults();showTab('inventario');flushSyncQueue();
-     setTimeout(()=>{ensureLocalSalesLoaded();loadUnitDayHistory().then(()=>renderHomeDashboard()).catch(()=>{})},250);
-   }else document.getElementById('loginOverlay').style.display='flex';
- }catch(e){document.getElementById('loginOverlay').style.display='flex'}
+     setTimeout(()=>{try{ensureLocalSalesLoaded();loadUnitDayHistory().then(()=>renderHomeDashboard()).catch(()=>{})}catch(e){}},250);
+   }else{
+     localStorage.removeItem('okeo_auth_token_v39');
+     document.getElementById('loginOverlay').style.display='flex';
+   }
+ }catch(e){
+   console.warn('Session bootstrap',e);
+   document.getElementById('loginOverlay').style.display='flex';
+ }
 })();
-if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));</script></body></html>
+if('serviceWorker'in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js'));</script>
+<script id="okeo-direct-login-v434">
+(function(){
+  const BACKEND='https://script.google.com/macros/s/AKfycbxFBV9P3t0t4FAX4y83yPhQpQnDmLJzNsp4afqoD6NKXMBROOO6Zm-00fuWgqjrcvgq/exec';
+  const qs=id=>document.getElementById(id);
+
+  function setText(id,text,cls){
+    const e=qs(id); if(!e) return;
+    e.textContent=text;
+    if(cls) e.className=cls;
+  }
+
+  function toHex(buffer){
+    return Array.from(new Uint8Array(buffer))
+      .map(b=>b.toString(16).padStart(2,'0')).join('');
+  }
+
+  async function sha256(text){
+    if(!window.crypto || !crypto.subtle) throw new Error('Criptografia do navegador indisponível');
+    const data=new TextEncoder().encode(String(text));
+    return toHex(await crypto.subtle.digest('SHA-256',data));
+  }
+
+  async function getJson(action,params){
+    const u=new URL(BACKEND);
+    u.searchParams.set('action',action);
+    u.searchParams.set('_ts',Date.now()+'_'+Math.random().toString(36).slice(2));
+    Object.entries(params||{}).forEach(([k,v])=>u.searchParams.set(k,String(v)));
+    const ctrl=new AbortController();
+    const timer=setTimeout(()=>ctrl.abort(),12000);
+    try{
+      const r=await fetch(u.toString(),{method:'GET',cache:'no-store',signal:ctrl.signal});
+      return await r.json();
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+
+  window.okeoDirectLogin=async function(ev){
+    if(ev) ev.preventDefault();
+    const btn=qs('loginBtn'), msg=qs('loginMsg');
+    const username=(qs('loginUser')?.value||'').trim();
+    const password=qs('loginPass')?.value||'';
+
+    if(!username || !password){
+      if(msg){msg.className='status warn';msg.textContent='Informe usuário e senha.';}
+      return false;
+    }
+
+    if(btn) btn.disabled=true;
+    if(msg){msg.className='status';msg.textContent='Entrando...';}
+
+    try{
+      const c=await getJson('login_challenge',{username});
+      if(!c || !c.ok) throw new Error('CHALLENGE: '+((c&&c.error)||'falhou'));
+
+      const passHash=await sha256(String(c.salt||'')+'|'+password);
+      const proof=await sha256(String(c.nonce||'')+'|'+passHash);
+
+      const r=await getJson('login_verify',{username,nonce:c.nonce,proof});
+      if(!r || !r.ok) throw new Error('VERIFY: '+((r&&r.error)||'usuário ou senha inválidos'));
+
+      localStorage.setItem('okeo_auth_token_v39',r.token);
+      localStorage.setItem('okeo_auth_user_v434',JSON.stringify(r.user||{}));
+
+      if(msg){msg.className='status ok';msg.textContent='Login realizado.';}
+      const overlay=qs('loginOverlay');
+      if(overlay) overlay.style.display='none';
+
+      // Entrega a sessão ao app principal se ele estiver disponível.
+      if(typeof window.okeoCompleteLogin==='function'){
+        window.okeoCompleteLogin(r);
+      } else {
+        // Fallback universal: recarrega com sessão já gravada.
+        setTimeout(()=>location.reload(),80);
+      }
+    } catch(e) {
+      if(btn) btn.disabled=false;
+      if(msg){msg.className='status warn';msg.textContent='Não foi possível entrar. '+(e?.message||String(e));}
+    }
+    return false;
+  };
+
+  async function selfTest(){
+    setText('loginJsStatus','JavaScript: ativo','loginCheck ok');
+    try{
+      const c=await getJson('login_challenge',{username:'__healthcheck__'});
+      // Mesmo usuário inexistente prova que o endpoint respondeu JSON.
+      if(c && typeof c==='object'){
+        setText('loginBackendStatus','Base Central: acessível','loginCheck ok');
+      } else {
+        throw new Error('Resposta inválida');
+      }
+    } catch(e) {
+      setText('loginBackendStatus','Base Central: falha','loginCheck bad');
+    }
+  }
+
+  function boot(){
+    setText('loginJsStatus','JavaScript: ativo','loginCheck ok');
+    const pass=qs('loginPass');
+    if(pass && !pass.dataset.enterBound){
+      pass.dataset.enterBound='1';
+      pass.addEventListener('keydown',e=>{if(e.key==='Enter')window.okeoDirectLogin(e)});
+    }
+    setTimeout(selfTest,30);
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
+  else boot();
+})();
+</script>
+</body></html>
